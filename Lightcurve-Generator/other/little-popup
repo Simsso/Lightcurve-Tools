@@ -1,0 +1,24 @@
+// little popup
+$('#element-on-which-the-popup-should-appear').on('click', function() {
+    if ($('#popup').css('display') == "none") {
+        $('#popup').css({ 'top': mouse.y + $(window).scrollTop(), 'left': mouse.x })
+        $('#popup').fadeIn('fast');
+    }
+    else
+        $('#popup').fadeOut('fast');
+}).on('mouseout', function() {
+    $('#popup').fadeOut('fast');  
+});
+$('#popup').on('click', function() {
+    // to-do code
+    
+    $('-popup').fadeOut(function() {
+        $(this).bind('mousemove', function() {
+            $(this).stop().show().css('opacity', 1); 
+        }); 
+    }).unbind('mousemove');    
+}).on('mousemove', function() {
+    $(this).stop().show().css('opacity', 1); 
+}).on('mouseout', function() {
+    $(this).fadeOut(); 
+});

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>ShapeGenerator</title>
+        <meta charset="UTF-8">
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <script src="jquery-1.11.1.min.js"></script>
+        <script type="text/javascript">
+            (function () {
+                // load .obj file
+                var rawFile = new XMLHttpRequest(); 
+                rawFile.open("GET", 'basic_shape.obj', false);
+                rawFile.onreadystatechange = function ()
+                {
+                    if(rawFile.readyState === 4)
+                        if(rawFile.status === 200 || rawFile.status == 0) {
+                            var allText = rawFile.responseText; // all text
+                            
+                            // seperate header, vertices/body and faces/footer
+                            var header = allText.substr(0, allText.indexOf('v'));
+                            var body = allText.substr(allText.indexOf('v'), allText.indexOf('f') - allText.indexOf('v'));
+                            var footer = allText.substr(allText.indexOf('f'), allText.length - allText.indexOf('f'));
+                            console.log('header\n' + header);
+                            console.log('body\n' + body);
+                            console.log('footer\n' + footer);
+                            
+                            // parse string to array
+                            body = body.split('\n'); 
+                            body.pop(); 
+                            var vertices = [];
+                            
+                            
+                            console.log(body); 
+                            for (var i = 0; i < body.length; i++) {
+                                var temp = body[i].split(' '); 
+                                vertices.push({
+                                    x: parseFloat(temp[1]),
+                                    y: parseFloat(temp[2]),
+                                    z: parseFloat(temp[3])
+                                }); 
+                                    
+                                if (temp[1] > 0) 
+                                    vertices[vertices.length-1].ToJ = 'Tom';
+                                else
+                                    vertices[vertices.length-1].ToJ = 'Jerry';
+                            }
+                            
+                            var models = []; 
+                            var stepSize = 1; 
+                            console.log(vertices);
+                            
+                            var A = 1;                                                       // A = [1]        (Tom x)
+                            for (var B = A/2; B <= A; B += stepSize) {                       // B = [A/2;A]    (Tom y)
+                                for (var C = B/2; C <= B; C+= stepSize) {                    // C = [B/2;B]    (Tom z)
+                                    for (var a = A/10; a <= A; a += stepSize) {              // a = [A/10;A]   (Jerry x)
+                                        for (var b = a/2; b <= a; b += stepSize) {           // b = [a/2;a]    (Jerry y)
+                                            for (var c = b/2; c <= b; c+= stepSize) {        // c = [b/2;b]    (Jerry z)
+                                                for (var d = A-a; d <= A+a; d += stepSize) { // d = [A-a;A+a]  (∆x Tom and Jerry)
+                                                    models.push(vertices.slice(0));
+                                                    /*var verticesCopy = vertices.slice(0);
+                                                    models.push({
+                                                        settings: { A: A, B: B, C: C, a: a, b: b, c: c, d: d }, 
+                                                        v: verticesCopy.slice(0)
+                                                    }); */
+                                                    // move Tom and Jerry away from each other
+                                                    for (var i = 0; i < models[models.length-1].length; i++) {
+                                                        // move in positive x direction for Tom and negative for Jerry
+                                                        if (models[models.length-1][i].ToJ == 'Tom') // move only halve the distance because both are moved
+                                                            models[models.length-1][i].x = models[models.length-1][i].x + (d / 2);
+                                                        else
+                                                            models[models.length-1][i].x = models[models.length-1][i].x - (d / 2);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            console.log(models); 
+                        }
+                }
+                rawFile.send(null);
+            })();
+        </script>
+    </head>
+</html>

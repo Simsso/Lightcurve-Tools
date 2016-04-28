@@ -1,0 +1,779 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lightcurve Generator</title>
+        <meta charset="UTF-8">
+        <style type="text/css">
+            html, body {
+                font-family: arial; 
+                padding: 0;
+                margin: 0; 
+            }
+            .wrapper {
+                margin: auto; 
+                padding: 0; 
+                width: 1210px; 
+            }
+            h2 {
+                padding: 5px; 
+                margin: 5px; 
+                margin-top: 10px; 
+            }
+            h2, th {
+                color: #000080;
+            }
+            #canvasContainer {
+                width: 310px; 
+                height: 334px; 
+            }
+            canvas {
+                display: none; 
+            }
+            .box td {
+                padding: 2px; 
+            }
+            input[type="number"] {
+                width: 70px; 
+            }
+            input[type="button"] {                
+                border-radius: 3px;
+                font-size: 11px;
+                font-weight: bold;
+                line-height: 27px;
+                outline: 0;
+                padding: 0 8px;
+                background-color: #4d90fe;
+                background-image: webkit-linear-gradient(top,#4d90fe,#4787ed);
+                border: 1px solid #3079ed;
+                color: #fff;
+                transition: all .2s;
+            }
+            input[type="button"]:hover {
+                background-color: #357ae8;
+                background-image: webkit-linear-gradient(top, #4d90fe, #357a38); 
+                border: 1px solid #2f5bb7;
+            }
+            input[type="button"]:active {
+                background-color: #357ae8;
+                background-image: webkit-linear-gradient(top, #4d90fe, #357a38); 
+                border: 1px solid #2f5bb7;
+                box-shadow: inset 0 1px 2px #225;
+            }
+            
+            #svgContainer {
+                height: 334px;
+                transition: all .2s;
+            }
+            .svg-wrapper {
+                height: 272px; 
+                width: 500px; 
+                margin: 0 0 5px 0; 
+                padding: 0; 
+            }
+            #svg {
+                height: 272px; 
+                width: 500px; 
+            }
+            
+            
+            svg circle {
+                stroke: black; 
+                fill: black; 
+                stroke-width: 1px; 
+            }
+            svg line {
+                stroke: rgb(200,200,200);
+                stroke-width: 1px;
+                shape-rendering: crispEdges; 
+            }
+            svg text {
+                font-size: 12px;
+                font-style: italic;
+                text-anchor: middle;
+            }
+            .box {
+                padding: 5px; 
+                margin: 0 5px 10px; 
+                border: 1px solid rgb(172, 172, 172);
+                float: left; 
+                box-shadow: 0 0 8px rgb(200, 200, 200);
+            }
+            .box table {
+                width: 100%; 
+            }
+            
+            #history-box {
+                width: 334px; 
+                display: none; 
+                /*overflow: auto;*/ 
+            }
+            .history-svg-element {
+                /* margin-top: 10px; animated*/ 
+                transition: all .2s;
+                
+                /* scale factor .668 from #svg to .history-svg-element */
+                /*height: 181.696px; animated*/
+                height: 0; 
+                width: 334px;
+            }
+            .history-svg-element-active {
+                box-shadow: 0 0 5px #aaa; 
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <h2>Lightcurve Generator</h2>
+            <div style="float: left; ">
+                <div id="canvasContainer" class="box">
+                    <table><tr><th>Preview</th></tr></table>
+                </div>
+                <div id="svgContainer" class="box">
+                    <table><tr><th>Lightcurve</th></tr></table>
+                    <div class="svg-wrapper">
+                        <svg id="svg" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <input id="calcLC" type="button" value="Calculate Lightcurve" />
+                </div><br style="clear: both; " />
+                <div class="box">
+                    <table cellpadding="0" cellspacing="0">
+                        <tr>
+                            <th colspan="2">Object Dimensions</th>
+                        </tr>
+                        <tr>
+                            <td>A: </td>
+                            <td><input id="userA" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>B: </td>
+                            <td><input id="userB" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>C: </td>
+                            <td><input id="userC" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>a: </td>
+                            <td><input id="usera" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>b: </td>
+                            <td><input id="userb" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>c: </td>
+                            <td><input id="userc" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>d: </td>
+                            <td><input id="userd" type="number" value="0.5" step="0.01" /></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="box">
+                    <table cellpadding="0" cellspacing="0">
+                        <tr>
+                            <th colspan="2">Sun Direction</th>
+                        </tr>
+                        <tr>
+                            <td>x: </td>
+                            <td><input id="userLightX" type="number" value="0" step="0.01" min="-1" max="1" /></td>
+                        </tr>
+                        <tr>
+                            <td>y: </td>
+                            <td><input id="userLightY" type="number" value="-1" step="0.01" min="-1" max="1" /></td>
+                        </tr>
+                        <tr>
+                            <td>z: </td>
+                            <td><input id="userLightZ" type="number" value="0.5" step="0.01" min="-1" max="1" /></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="box">
+                    <table>
+                        <tr>
+                            <th colspan="2">Other Settings</th>
+                        </tr>
+                        <tr>
+                            <td>Subdivisions: </td>
+                            <td><input id="userSubdiv" type="number" value="32" step="1" min="3" /></td>
+                        </tr>
+                        <tr>
+                            <td>Lightcurve Points: </td>
+                            <td><input id="userLcPoints" type="number" value="100" step="1" min="1" /></td>
+                        </tr>
+                        <tr>
+                            <td>Camera Opening: </td>
+                            <td><input id="userCameraOpening" type="number" value="10" step="0.1" min="0" /></td>
+                        </tr>
+                        <tr>
+                            <td>Rotational Phase (min): </td>
+                            <td><input id="userRotPhaseMin" type="number" value="0" step="0.1" /></td>
+                        </tr>
+                        <tr>
+                            <td>Rotational Phase (max): </td>
+                            <td><input id="userRotPhaseMax" type="number" value="1" step="0.1" /></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="box" id="history-box">
+                <div id="active-history-marker" style="height: 0; width: 0; border: 20px solid transparent; border-left-color: #000080; position: absolute; margin-top: 0; margin-left: -5px; display: none; ">
+                    <div style="height: 0; width: 0; border: 19px solid transparent; border-left-color: #4d90fe; margin-top: -19px; margin-left: -20px; "></div>
+                </div>
+                <table><tr><th>History</th></tr></table>
+                <div id="svg-history"></div>
+            </div>
+        </div>
+        <!--style="height: 0; width: 0; margin: 0; padding: 0; overflow: hidden; "-->
+        <div id="tmp"></div>
+        <script src="jquery-1.11.1.min.js"></script>
+        <script src="three.min.js"></script>
+        <!-- scripts required for svg to png conversion
+        <script type="text/javascript" src="http://canvg.googlecode.com/svn/trunk/rgbcolor.js"></script> 
+        <script type="text/javascript" src="http://canvg.googlecode.com/svn/trunk/StackBlur.js"></script>
+        <script type="text/javascript" src="http://canvg.googlecode.com/svn/trunk/canvg.js"></script>
+        <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+        -->
+        
+        <script type="text/javascript">
+            // store important DOM elements in global vars
+            var canvasContainer = $('#canvasContainer');
+            var svg = $('#svg'); 
+            
+            var calculatingLightCurve = false; // true when a lightcurve is currently calculated
+            
+            // height constants
+            // canvas and canvasContainer size in pxl
+            canvasContainer.width = 310;
+            canvasContainer.height = 310;
+            var historyBoxSvgHeight = 182; 
+            
+            var Tilmann, Timo, canvas, light; // scene elements
+            
+            // renderer and scene settings
+			var scene = new THREE.Scene();
+			var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+			renderer.setSize(canvasContainer.width, canvasContainer.height);
+			canvasContainer.append(renderer.domElement);
+            
+            // default values
+            // may be changed at runtime by user input
+            var defaultCameraOpening = parseFloat($('#userCameraOpening').val());
+            var defaultLightPos = { x: parseFloat($('#userLightX').val()), y: parseFloat($('#userLightY').val()), z: parseFloat($('#userLightZ').val()) }; 
+            var defaultCameraPos = { x: 0, y: -defaultCameraOpening/2, z: 0 };
+            var defaultCameraRot = { x: deg2rad(90), y: deg2rad(0), z: deg2rad(0) };
+            
+            // camera
+			var camera = new THREE.OrthographicCamera( // orthographic camera defines a quader which content is shown
+                defaultCameraOpening/-4, // left
+                defaultCameraOpening/4,  // right
+                defaultCameraOpening/4,  // top
+                defaultCameraOpening/-4, // bottom
+                1, // near
+                defaultCameraOpening+1 // far
+            );
+            camera.position.set(defaultCameraPos.x, defaultCameraPos.y, defaultCameraPos.z);
+            camera.rotation.set(defaultCameraRot.x, defaultCameraRot.y, defaultCameraRot.z);
+            
+                
+            // light
+            light = new THREE.DirectionalLight(0xffffff); // sun light
+            light.position.set(defaultLightPos.x, defaultLightPos.y, defaultLightPos.z).normalize(); 
+            // its rays go from the position through the origin and parallel so its rotations doesn't matter 
+            scene.add(light);
+            
+            // refreshScene function
+			var render = function(interval) { // if interval is set to true the function will call itself
+                if (interval)
+                    requestAnimationFrame(render); // intelligent way of requesting a new frame
+                
+                if (!calculatingLightCurve) { // only read new user settings and values when a lc is not rendered at the moment
+                    // refresh functions
+                    refreshGeometry(); 
+                    refreshCameraAndLight(); 
+                }
+                
+				renderer.render(scene, camera); // actual render function
+			};
+			render(true);
+            
+            
+            $(document).ready(function () {
+                canvas = $('canvas')[0];
+                $('canvas').fadeIn(300);
+                
+                //$(window).trigger('resize'); 
+                
+                /*$('#history-box').scroll(function() {
+                    var offsetTop = $('.history-svg-element:eq(' + (currentlyMarkedSvgIndex) + ')').offset().top; 
+                    if ($('#active-history-marker:animated').length == 1) {
+                        console.log("animation running"); 
+                        return;
+                    }
+                    console.log("eingriff");
+                    $('#active-history-marker').css(
+                        { 
+                            'top': (
+                                offsetTop +  
+                                historyBoxSvgHeight/2 - 
+                                10 - 
+                                parseInt($('#active-history-marker').css('border-width').replace('px',''))/2
+                            ) 
+                        }
+                    ); 
+                }); */
+                
+                // enable keypress ENTER to recalculate the lightcurve
+                $('input[type="number"]').on('keypress', function (event) {
+                    if (event.which == 13 ) // KBD_ENTER  
+                        $('#calcLC').trigger('click');
+                }); 
+                $('#calcLC').trigger('click'); // calc lightcurve when loading is finished
+            }); 
+            
+            // adjust max-height of history box when the window is being resized
+            /*$(window).on('resize', function() {
+                // define max height of history box
+                $('#history-box').css({ 'max-height': ($(window).height()-53-10-12) });
+            });*/ 
+            
+            
+            // lightcurve calculation
+            var lc, lcPoints, yAxisOffset = 19; 
+            $('#calcLC').on('click', function () { // calculate button click event (triggered by a few other functions)
+                calculatingLightCurve = true; 
+                addArrayHistoryElement(); // pushes the current user input values to the history array
+                $('#svg').unbind('mousemove'); // avoid that the shape rotation can be affected when the svg fades out and the lc calculation is already running
+                svg.fadeOut(300); // hide old lc while the new one is being calculated
+                markHistorySvgAsActive(-1); 
+                lcPoints = parseFloat($('#userLcPoints').val()); // number of points in the lightcurve
+                
+                // check if user data for rotation phase max and min is valid
+                
+                var rotPhaseMin = parseFloat($('#userRotPhaseMin').val()), rotPhaseMax = parseFloat($('#userRotPhaseMax').val());
+                if (isNaN(rotPhaseMin)) {
+                    $('#userRotPhaseMin').val(0); 
+                    rotPhaseMin = 0;
+                }
+                if (isNaN(rotPhaseMax)) {
+                    $('#userRotPhaseMax').val(1); 
+                    rotPhaseMax = 1;
+                }
+                getLightCurve(rotPhaseMin*360, rotPhaseMax*360, canvas, lcPoints);
+            });
+            var settingsHistory = []; 
+            $('#calcLC').on('finished', function () { // triggered (by getLightCurve) when calculation has finished
+                var lcPointRadius = 1, xAxisOffset = 20; // pixel values allow svg padding adaption
+                var lcMin = arrayMin(lc), lcMax = arrayMax(lc); // get min and max values
+                var xSteps = ((svg.width() - yAxisOffset) - 2*lcPointRadius) / lcPoints; // calculate pixel 
+                var output = getSVGAxis(svg, xAxisOffset, yAxisOffset); // output variable is a collection of all svg element children
+                for (var i = 0; i < lc.length; i++) { // add points
+                    output += '<circle cx="'+(i*xSteps + lcPointRadius + yAxisOffset)+'" cy="'+
+                        map(lc[i], lcMin, lcMax, lcPointRadius, svg.height() - lcPointRadius - xAxisOffset)
+                    +'" r="'+lcPointRadius+'" />'; 
+                }
+                
+                $('#svg').html(output); // manipulate the DOM only once per lightcurve 
+                svg.fadeIn(300); // show lc
+                
+                // needs to be before the onmousemove listener is added to the svg because otherwise the line and the text might be copied as well
+                addSvgHistoryElement(output); // adds rendered svg to this history div 
+                
+                $('#svg').on('mousemove', function (evt) { // make svg element responsive (show the rotated shape depending on the mouse position)
+                    // find mouse position relative to svg element
+                    var x = evt.pageX - $('#svg').offset().left;
+                    if (x > yAxisOffset-1) { // above the diagram
+                        // allow roataion in specific phase rotations ranges
+                        setSceneRot(map(map(x, yAxisOffset, svg.width()-1, 0, 360), 0, 360, renderedStartRotDeg, renderedTargetRotDeg)); // rotate scene
+
+                        if (!calculatingLightCurve) { // do line 
+                            // add line to svg that represents the rendered rotations phase in the canvas
+                            if ($('#svg > #svg-rotphase-line').length == 0) {
+                                var newLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                                newLine.setAttribute('id','svg-rotphase-line');
+                                var newText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                                newText.setAttribute('id','svg-rotphase-text');
+                                $('#svg').append(newLine);
+                                $('#svg').append(newText);
+                            }
+                            // position the new line and write the text
+                            $('#svg-rotphase-line').attr('x1', x).attr('x2', x).attr('y1', 0).attr('y2', (svg.height() - xAxisOffset + 4));
+                            console.log(renderedTargetRotDeg); 
+                            $('#svg-rotphase-text').attr('x', x).attr('y', (svg.height()-xAxisOffset)).html(
+                                Math.round(map(x, yAxisOffset, svg.width()-1, renderedStartRotDeg/360, renderedTargetRotDeg/360)*1000)/1000
+                            );
+                            if (map(x, yAxisOffset, svg.width()-1, 0, 1) < .9)
+                                $('#svg-rotphase-text').css('text-anchor', 'start');
+                            else 
+                                $('#svg-rotphase-text').css('text-anchor', 'end');
+                        }
+                    }
+                });
+                
+                // progress reset
+                $('#svgContainer').css('background-image', 'linear-gradient(0, #fff, #fff)');
+                
+                calculatingLightCurve = false;
+            });
+            
+            // pushes the current user input values to the history array
+            function addArrayHistoryElement() {
+                settingsHistory.push({
+                    A: parseFloat($('#userA').val()),
+                    B: parseFloat($('#userB').val()),
+                    C: parseFloat($('#userC').val()),
+                    a: parseFloat($('#usera').val()),
+                    b: parseFloat($('#userb').val()),
+                    c: parseFloat($('#userc').val()),
+                    d: parseFloat($('#userd').val()), 
+                    subdiv: parseInt($('#userSubdiv').val()), 
+                    x: parseFloat($('#userLightX').val()), 
+                    y: parseFloat($('#userLightY').val()), 
+                    z: parseFloat($('#userLightZ').val()), 
+                    points: parseFloat($('#userLcPoints').val()),
+                    camOpening: parseFloat($('#userCameraOpening').val()),
+                    min: parseFloat($('#userRotPhaseMin').val()) * 360, // convert to deg
+                    max: parseFloat($('#userRotPhaseMax').val()) * 360 
+                });
+            }
+            
+            // adds rendered svg to this history div
+            function addSvgHistoryElement(data) {
+                if(!$('#history-box').is(':visible')) 
+                    $('#history-box').fadeIn(300); 
+                
+                $('#svg-history').prepend(
+                    '<svg data-id="'+(settingsHistory.length-1)+'" class="history-svg-element" version="1.1" xmlns="http://www.w3.org/2000/svg"><g transform="scale(0.668)">' + data + '</g></svg>'
+                );
+                $('#history-box svg').first().animate({ 
+                    'height': historyBoxSvgHeight, 
+                    'margin-top': 10 
+                }, 300, function() {
+                    markHistorySvgAsActive(0); // mark newest element as currently shown / active 
+                });  
+                
+                
+                $('#history-box svg').first().on('mouseover', function() {
+                    if (calculatingLightCurve) // disallow changes while calculating a lc
+                        return;
+                    
+                    markHistorySvgAsActive($(this).index());
+                    
+                    var tmp = settingsHistory[$(this).data('id')];
+                    $('#userA').val(tmp.A);
+                    $('#userB').val(tmp.B);
+                    $('#userC').val(tmp.C);
+                    $('#usera').val(tmp.a);
+                    $('#userb').val(tmp.b);
+                    $('#userc').val(tmp.c);
+                    $('#userd').val(tmp.d);
+                    $('#userSubdiv').val(tmp.subdiv);
+                    $('#userLightX').val(tmp.x);
+                    $('#userLightY').val(tmp.y);
+                    $('#userLightZ').val(tmp.z);
+                    $('#userLcPoints').val(tmp.points);
+                    $('#userCameraOpening').val(tmp.camOpening);
+                    $('#userRotPhaseMin').val(tmp.min/360);
+                    renderedStartRotDeg = tmp.min; 
+                    $('#userRotPhaseMax').val(tmp.max/360);
+                    renderedTargetRotDeg = tmp.max; 
+                    var renderLineAndText = $('#svg').children().last().prev().andSelf(); // copy line and text showing the rotation phase
+                    $('#svg').html($(this).children().first().html());
+                    $('#svg').append(renderLineAndText);
+                }); 
+            }
+            
+            var currentlyMarkedSvgIndex = -1; 
+            function markHistorySvgAsActive(index) {
+                currentlyMarkedSvgIndex = index; 
+                $('.history-svg-element').attr('class', 'history-svg-element');
+                if (index == -1) {
+                    $('#active-history-marker').fadeOut(300); 
+                    return; 
+                }
+                $('.history-svg-element:eq(' + (index) + ')').attr('class', 'history-svg-element history-svg-element-active ');
+                
+                // position active marker triangle
+                console.log("offset-top " + $('.history-svg-element:eq(' + (index) + ')').offset().top); 
+                console.log("height/2 " + $('.history-svg-element:eq(' + (index) + ')').height()/2); 
+                var offsetTop = 93; 
+                if (index != 0) 
+                    offsetTop = $('.history-svg-element:eq(' + (index) + ')').offset().top; 
+                setTimeout(function() {
+                    $('#active-history-marker').stop(false, false); // abort running animations on this element
+                    $('#active-history-marker').animate(
+                        { 
+                            'top': (
+                                offsetTop +  
+                                historyBoxSvgHeight/2 - 
+                                10 - 
+                                parseInt($('#active-history-marker').css('border-width').replace('px',''))/2
+                            ), 
+                            'opacity': 1
+                        }, 
+                        300
+                    ); 
+                
+                    // fade in if not already visible
+                    if(!$('#active-history-marker').is(':visible')) 
+                        $('#active-history-marker').fadeIn(300); 
+                }, 10); 
+            }
+            
+            
+            // changes the default values for camera and light and updates them in the scene
+            function refreshCameraAndLight() {
+                // camera
+                // position
+                // rotation
+                // opening
+                var userInputCameraOpening = parseFloat($('#userCameraOpening').val()); 
+                if (userInputCameraOpening != defaultCameraOpening) { // update cam only if user values have changed
+                    defaultCameraOpening = userInputCameraOpening; 
+                    console.log(defaultCameraOpening); 
+                    camera = new THREE.OrthographicCamera( 
+                        defaultCameraOpening/-4, defaultCameraOpening/4, defaultCameraOpening/4, defaultCameraOpening/-4, 1, defaultCameraOpening+1
+                    );
+                    defaultCameraPos.y = -defaultCameraOpening/2;
+                    setSceneRot(0); 
+                }
+                
+                
+                // light
+                if (calculatingLightCurve) {
+                    /*$('#userLightX').val(light.position.x);
+                    $('#userLightY').val(light.position.y);
+                    $('#userLightZ').val(light.position.z);*/
+                }
+                else { // update light only if lc calculation is not running
+                    var userInputLightPos = {
+                        x: parseFloat($('#userLightX').val()), 
+                        y: parseFloat($('#userLightY').val()), 
+                        z: parseFloat($('#userLightZ').val()) 
+                    };
+                    // update only if user input has changed
+                    if (userInputLightPos.x != defaultLightPos.x || userInputLightPos.y != defaultLightPos.y || userInputLightPos.z != defaultLightPos.z) {
+                        console.log(userInputLightPos + defaultLightPos);
+                        copyXYZ(defaultLightPos, userInputLightPos); 
+                        copyXYZ(light.position, defaultLightPos);
+                    }
+                }
+            }
+            
+            
+            // refreshes T6t
+            var renderedSettings; 
+            function refreshGeometry() {
+                var settings = {
+                    A: parseFloat($('#userA').val()),
+                    B: parseFloat($('#userB').val()),
+                    C: parseFloat($('#userC').val()),
+                    a: parseFloat($('#usera').val()),
+                    b: parseFloat($('#userb').val()),
+                    c: parseFloat($('#userc').val()),
+                    d: parseFloat($('#userd').val()), 
+                    subdiv: parseInt($('#userSubdiv').val())
+                };
+                
+                if (!renderedSettings || 
+                    settings.A != renderedSettings.A || 
+                    settings.B != renderedSettings.B || 
+                    settings.C != renderedSettings.C || 
+                    settings.a != renderedSettings.a || 
+                    settings.b != renderedSettings.b || 
+                    settings.c != renderedSettings.c || 
+                    settings.d != renderedSettings.d ||
+                    settings.subdiv != renderedSettings.subdiv
+                ) {
+                    // refresh geometry only if values have changed
+                    renderedSettings = settings;
+
+                    // T&t
+                    Tilmann = new THREE.Mesh(new THREE.SphereGeometry(1, settings.subdiv, settings.subdiv), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+                    Timo = new THREE.Mesh(new THREE.SphereGeometry(1, settings.subdiv, settings.subdiv), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+                    removeAllChildren();
+                    scene.add(Tilmann);
+                    scene.add(Timo);
+
+                    // deform mesh depending on A, B and C
+                    for (var i = 0; i < Tilmann.geometry.vertices.length; i++) {
+                        Tilmann.geometry.vertices[i].x *= settings.A;
+                        Timo.geometry.vertices[i].x *= settings.a;
+                        Tilmann.geometry.vertices[i].y *= settings.B;
+                        Timo.geometry.vertices[i].y *= settings.b;
+                        Tilmann.geometry.vertices[i].z *= settings.C;
+                        Timo.geometry.vertices[i].z *= settings.c;
+                    }
+                    
+                    // move objects away from each other
+                    Tilmann.position.x -= settings.d;
+                    Timo.position.x += settings.d;
+                }
+            }
+            
+            // removes all scene children except from the light
+            function removeAllChildren() {
+                console.log(scene.children);
+                while (scene.children.length > 1)
+                    scene.remove(scene.children[1]);
+            }
+            
+            // not working yet
+            function getImageFromSvg() {
+                /*
+                $('#tmp').append('<canvas id="tmp-canvas" width="1000px" height="600px"></canvas>'); 
+                canvg(document.getElementById('tmp-canvas'), $('.svg-wrapper').first().html().trim()); // problems with vertical text and canvas size
+                
+                var canvas = document.getElementById("tmp-canvas");
+                var img    = canvas.toDataURL("image/png");*/
+                /*
+                var src = 'data:image/svg+xml;base64,'+window.btoa($('.svg-wrapper').first().html().trim());
+                // Load up our image.
+
+                document.write('<img src="'+src+'"/>');*/
+                
+                /*var html = d3.select("#svg")
+                    .attr("version", 1.1)
+                    .attr("xmlns", "http://www.w3.org/2000/svg")
+                    .node().parentNode.innerHTML;
+
+                //console.log(html);
+                var imgsrc = 'data:image/svg+xml;base64,'+ btoa(html);
+                var img = '<img src="'+imgsrc+'">'; 
+                $('body').append(img); */
+            }
+            
+            // lightcurve functions
+            var renderedStartRotDeg, renderedTargetRotDeg; // make those vars global to allow mousemove event work correct above the canvas
+            function getLightCurve(startRotDeg, targetRotDeg, canvas, points) {
+                renderedStartRotDeg = startRotDeg; 
+                renderedTargetRotDeg = targetRotDeg;
+                setSceneRot(startRotDeg); // reset scene rotation
+                lc = []; // delete old lc array
+                getLightCurveLoop(startRotDeg, targetRotDeg, canvas, points, 0); // loop in external function (getLightCurveLoop()) to allow usage of setTimeout function
+            }
+            function getLightCurveLoop (startRotDeg, targetRotDeg, canvas, points, i) { // helper function for getLightCurve()
+                if (i < points) {
+                    $('#svgContainer').css('background-image', 'linear-gradient(90deg, #ddf '+((i+1)/points*100)+'%, transparent 0%');
+                    render(false);
+                    lc.push(-2.5  * (Math.log(getCanvasBrightness(canvas)) / Math.LN10)); // get canvas brightness and convert from linear to logarithmic scale
+                    rotScene((targetRotDeg - startRotDeg) / points); // rotate scene one step further
+                    setMainProgress((i+1)/points);
+                    setTimeout(function () { getLightCurveLoop(startRotDeg, targetRotDeg, canvas, points, i+1); }, 1); // next loop run
+                }
+                else { // loop finished
+                    console.log(lc);
+                    setSceneRot(startRotDeg); 
+                    $('#calcLC').trigger('finished');
+                }
+            }
+            
+            function setMainProgress(value) {
+                    $('#svgContainer').css('background-image', 'linear-gradient(90deg, #ddf '+value*100+'%, transparent 0%');
+            }
+            
+            // set scene rotation to a specific degree
+            function setSceneRot(deg) {
+                // first reset rotation and position of light and cam and rotate afterwards
+                copyXYZ(camera.rotation, defaultCameraRot);
+                copyXYZ(camera.position, defaultCameraPos);
+                copyXYZ(light.position, defaultLightPos);
+                if (deg != 0)
+                    rotScene(deg);
+            }
+            
+            // rotate scene from current state a specific angle further
+            function rotScene(deg) {
+                camera.rotation.y += deg2rad(deg); // set camera rotation
+                copyXYZ(camera.position, rotVectorZ(camera.position, deg2rad(deg))); // get and set camera position
+                copyXYZ(light.position, rotVectorZ(light.position, deg2rad(deg))); // get and set set light position
+            }
+            
+            // returns brightness of a grayscale canvas
+            function getCanvasBrightness (canvas) { 
+                var gl = canvas.getContext("webgl", {preserveDrawingBuffer: true});
+                var pixelData = new Uint8Array(canvas.width * canvas.height * 4);
+                gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixelData);
+                var sum = 0; 
+                for (var i = 0; i < pixelData.length; i += 4) // i:red i+1:green i+2:blue i+3:alpha
+                    sum += pixelData[i]; // sum up red values which represent the brightness of a grayscale canvas (better performance)
+                return sum; 
+            }
+            
+            // returns a string with different svg elements which show axes
+            function getSVGAxis (svg, xAxisOffset, yAxisOffset) {
+                var output = '';
+                // axis lines
+                output += '<line x1="'+yAxisOffset+'" x2="'+(svg.width())+'" y1="'+(svg.height()-xAxisOffset)+'" y2="'+(svg.height()-xAxisOffset)+'" />';
+                output += '<line x1="'+yAxisOffset+'" x2="'+yAxisOffset+'" y1="'+0+'" y2="'+(svg.height()-xAxisOffset)+'" />';
+                //titles
+                output += '<text x="'+((svg.width()-yAxisOffset)/2+yAxisOffset)+'" y="'+(svg.height() - 2)+'">rotational phase</text>';
+                output += '<text y="'+((svg.height()-xAxisOffset)/2)+'" x="'+4+'" style="writing-mode: tb; glyph-orientation-vertical: 270; direction: rtl; ">edutingam</text>';
+                // scale
+                output += '<text x="'+(3+yAxisOffset)+'" y="'+(svg.height() - 2)+'">'+(renderedStartRotDeg/360)+'</text>'; // 0
+                output += '<text x="'+(svg.width()-3)+'" y="'+(svg.height() - 2)+'" style="text-anchor: end; ">'+(renderedTargetRotDeg/360)+'</text>'; // 1
+                // ticks
+                for (var i = 0, ticks = 10; i <= ticks; i++) {
+                    output += '<line x1="'+((svg.width()-1-yAxisOffset)/ticks * i + yAxisOffset)+'" x2="'+((svg.width()-1-yAxisOffset)/ticks * i + yAxisOffset)+'" y1="'+(svg.height()-xAxisOffset+1)+'" y2="'+(svg.height()-xAxisOffset+4)+'" />';
+                    output += '<line y1="'+((svg.height()-xAxisOffset)/ticks*i)+'" y2="'+((svg.height()-xAxisOffset)/ticks*i)+'" x1="'+(yAxisOffset)+'" x2="'+(yAxisOffset-4)+'" />'; 
+                }
+                return output;
+            }
+            
+            // rotates a vector around its z axis
+            function rotVectorZ (vector, rad) {
+                if (!vector)
+                    return 0;
+                return vectorXmatrix(vector, rotMatZ(rad));
+            }
+            
+            // multiplies a vector with a matrix
+            function vectorXmatrix (v, m) {
+                if (!v || !m)
+                    return 0;
+                return {
+                    x: m[0][0]*v.x + m[0][1]*v.y + m[0][2]*v.z,
+                    y: m[1][0]*v.x + m[1][1]*v.y + m[1][2]*v.z,
+                    z: m[2][0]*v.x + m[2][1]*v.y + m[2][2]*v.z
+                };
+            }
+            
+            // calculates a rotation matrix to rotate around the z axis
+            function rotMatZ (rad) {
+                if (!rad)
+                    return 0; 
+                return [
+                    [Math.cos(rad), -Math.sin(rad), 0], 
+                    [Math.sin(rad), Math.cos(rad),  0], 
+                    [0,             0,              1]
+                ];
+            }       
+            
+            // calculates a rotation matrix to rotate around an origin vector
+            function rotMatVector (v, rad) {
+                if (!rad || !v)
+                    return 0; 
+                return [
+                    [v.x*v.x*(1-Math.cos(rad))+     Math.cos(rad), v.x*v.y*(1-Math.cos(rad))-v.z*Math.sin(rad), v.x*v.z*(1-Math.cos(rad))+v.y*Math.sin(rad)], 
+                    [v.y*v.x*(1-Math.cos(rad))+v.z*Math.sin(rad), v.y*v.y*(1-Math.cos(rad))+    Math.cos(rad), v.y*v.z*(1-Math.cos(rad))-v.x*Math.sin(rad)], 
+                    [v.z*v.x*(1-Math.cos(rad))-v.y*Math.sin(rad), v.z*v.y*(1-Math.cos(rad))+v.x*Math.sin(rad), v.z*v.z*(1-Math.cos(rad))+    Math.cos(rad)]
+                ];
+            }
+            
+            // converts degree to radian
+            function deg2rad(deg) {
+                return (deg * 0.0174532925);
+            }
+            
+            function copyXYZ(target, origin) { target.x = origin.x; target.y = origin.y; target.z = origin.z; }
+            function map(x, in_min, in_max, out_min, out_max) { return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min; } // maps a value
+            
+            function arrayMin(x) { var min = x[0]; for (i = 0; i < x.length; i++) if (x[i] < min) min = x[i]; return min; } // returns min value of an array
+            function arrayMax(x) { var max = x[0]; for (i = 0; i < x.length; i++) if (x[i] > max) max = x[i]; return max; } // returns max value of an array
+		</script>
+    </body>
+</html>

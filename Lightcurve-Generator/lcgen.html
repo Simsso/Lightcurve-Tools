@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lightcurve Generator</title>
+        <meta charset="UTF-8">
+        <link rel="shortcut icon" href="lc.ico" type="image/x-icon" />
+        <style type="text/css">
+            html, body {
+                font-family: arial; 
+                padding: 0;
+                margin: 0; 
+                min-height: 100%;
+            }
+            .wrapper {
+                margin: auto; 
+                padding: 0; 
+                width: 854px; /* without history column: 854; else: 1053 */
+            }
+            h2, h3 {
+                padding: 5px; 
+                margin: 5px; 
+                margin-top: 10px; 
+            }
+            h2, h3, th {
+                color: #000080;
+            }
+            #canvasContainer {
+                width: 310px; 
+                height: 334px; 
+            }
+            canvas {
+                display: none; 
+            }
+            .box td {
+                padding: 2px; 
+            }
+            input[type="number"] {
+                width: 70px; 
+            }
+            input[type="checkbox"] {
+                margin: 0; 
+            }
+            input[type="button"], button, .input-file-fake {    
+                width: 266px; 
+                /*border-radius: 3px;*/
+                font-size: 11px;
+                font-weight: bold;
+                line-height: 27px;
+                outline: 0;
+                padding: 0 8px;
+                color: #fff;
+                transition: background-color .2s, border .2s;
+            }
+            .box-like {
+                margin: 0 0 2px 5px; 
+            }
+            
+            .blue {
+                background-color: #4d90fe;
+                border: 1px solid #3079ed;
+            }
+            .blue:hover {
+                background-color: #357ae8;
+                border: 1x solid #2f5bb7;
+            }
+            .blue:active {
+                background-color: #357ae8;
+                border: 1px solid #2f5bb7;
+            }
+            .red {
+                background-color: #FE4D4D;
+                border: 1px solid #D52626;
+            }
+            .red:hover {
+                background-color: #E83535 ;
+                border: 1px solid #A32929;
+            }
+            .red:active {
+                background-color: #E83535;
+                border: 1px solid #972727;
+            }
+            .gray {
+                color: black !important; 
+                background-color: #E4E4E4;
+                border: 1px solid #CACACA;
+            }
+            .gray:hover {
+                background-color: #D3D3D3  ;
+                border: 1px solid #9E9C9C ;
+            }
+            .gray:active {
+                background-color: #CECCCC;
+                border: 1px solid #8D8D8D ;
+            }
+            .blue:active, .red:active, .gray:active {
+                box-shadow: inset 0 1px 2px #225;
+            }
+            
+            .input-file-fake {
+                display: inline-block;
+                text-align: center; 
+                width: 248px; 
+                margin-left: 5px; 
+            }
+            
+            input[type="text"] {
+                font-size: 11px;
+                line-height: 11px;
+                padding: 7px 7px;
+                border: 1px solid #3079ed;
+                color: #000;
+                transition: all .2s;
+            }
+            
+            #svgContainer {
+                height: 334px;
+                transition: all .2s;
+            }
+            .svg-wrapper {
+                height: 272px; 
+                width: 500px; 
+                margin: 0 0 5px 0; 
+                padding: 0; 
+            }
+            #svg {
+                height: 272px; 
+                width: 500px; 
+                position: absolute;
+            }
+            #reference-svg {
+                display: inline;
+                margin-left: 19px;
+                height: 252px;
+                width: 481px;
+                opacity: .5;
+            }
+            
+            svg circle {
+                stroke: black; 
+                fill: black; 
+                stroke-width: 1px; 
+            }
+            
+            #reference-svg circle {
+                stroke: red; 
+                fill: red; 
+                stroke-width: 1px; 
+            }
+            #reference-svg .pc {
+                stroke: red !important; 
+            }
+            
+            svg line {
+                stroke: rgb(200,200,200);
+                stroke-width: 1px;
+                shape-rendering: crispEdges; 
+            }
+            svg .pc {
+                stroke-width: 1px; 
+                shape-rendering: inherit; 
+                stroke: black; 
+                display: none; 
+            }
+            svg text {
+                font-size: 12px;
+                font-style: italic;
+                text-anchor: middle;
+            }
+            .box {
+                opacity: 0.001; 
+                padding: 5px; 
+                margin: 0 5px 10px; 
+                border: 1px solid rgb(172, 172, 172);
+                float: left; 
+                box-shadow: 0 0 8px rgb(200, 200, 200);
+            }
+            .box table {
+                width: 100%; 
+            }
+            
+            #history-box {
+                width: 177px; 
+                display: none; 
+                /*overflow: auto;*/ 
+            }
+            .history-svg-element {
+                /* margin-top: 10px; animated*/ 
+                transition: box-shadow .2s;
+                
+                /*height: 181.696px; animated*/
+                height: 0; 
+                width: 177px;
+                float: left; 
+            }
+            .history-svg-element line {
+                stroke-width: 1.5px; /* translate lets 1px width lines occure strange and 1.5px width fits that*/
+            }
+            .history-svg-element-active {
+                box-shadow: 0 0 5px #aaa; 
+            }
+            
+            .mini-popup {
+                width: 75px;
+                position: absolute;
+                background-color: white;
+                height: 0px;
+                top: 0;
+                left: 0;
+                margin: 0;
+                padding: 0;
+                margin-top: -2px;
+                display: none; 
+            }
+            .mini-popup input, .mini-popup button {
+                width: 100%; 
+            }
+            
+            #tmp {
+                margin: 0; 
+                padding: 0;
+                border: 0; 
+                height: 0; 
+                width: 0;
+                overflow: hidden; 
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <h2>Lightcurve Generator</h2>
+            <div style="float: left; width: 854px; ">
+                <div id="canvasContainer" class="box">
+                    <table><tr><th>Preview</th></tr></table>
+                </div>
+                <div id="svgContainer" class="box">
+                    <table><tr><th>Lightcurve</th></tr></table>
+                    <div class="svg-wrapper">
+                        <svg id="svg" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
+                        <svg id="reference-svg" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <div style="
+                        width: 500px;
+                        height: 32px;
+                        font-size: 12.5px;
+                        float: left;
+                        overflow: hidden;
+                        text-align: center;
+                    " id="lc-info"></div>
+                </div><br style="clear: both; " />
+                <div class="box">
+                    <table cellpadding="0" cellspacing="0">
+                        <tr>
+                            <th colspan="2">Object</th>
+                        </tr>
+                        <tr>
+                            <td>A: </td>
+                            <td><input id="userA" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>B: </td>
+                            <td><input id="userB" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>C: </td>
+                            <td><input id="userC" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>a: </td>
+                            <td><input id="usera" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>b: </td>
+                            <td><input id="userb" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>c: </td>
+                            <td><input id="userc" type="number" value="1" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td>d: </td>
+                            <td><input id="userd" type="number" value="0.5" step="0.01" /></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                               <input type="button" id="userResetObject" class="gray" value="Reset" style="
+                                    margin-left: -5px;
+                                    margin-bottom: -5px;
+                                    margin-right: 0;
+                                    width: calc(50% + 4px);
+                                ">
+                               <input type="button" id="userHideObject" class="gray" value="Hide" style="
+                                    margin-bottom: -27px;
+                                    width: calc(50% + 4px);
+                                    margin-left: -2px;
+                                    margin-right: -6px;
+                                ">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="box">
+                    <table cellpadding="0" cellspacing="0">
+                        <tr>
+                            <th colspan="2">Sun</th>
+                        </tr>
+                        <tr>
+                            <td>x: </td>
+                            <td><input id="userLightX" type="number" value="0" step="0.01" min="-1" max="1" /></td>
+                        </tr>
+                        <tr>
+                            <td>y: </td>
+                            <td><input id="userLightY" type="number" value="-1" step="0.01" min="-1" max="1" /></td>
+                        </tr>
+                        <tr>
+                            <td>z: </td>
+                            <td><input id="userLightZ" type="number" value="0.5" step="0.01" min="-1" max="1" /></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="box">
+                    <table>
+                        <tr>
+                            <th colspan="2">Settings</th>
+                        </tr>
+                        <tr>
+                            <td>Subdivisions: </td>
+                            <td><input id="userSubdiv" type="number" value="32" step="1" min="3" /></td>
+                        </tr>
+                        <tr>
+                            <td>Lightcurve Points: </td>
+                            <td><input id="userLcPoints" type="number" value="100" step="1" min="1" /></td>
+                        </tr>
+                        <tr>
+                            <td>Camera Opening: </td>
+                            <td><input id="userCameraOpening" type="number" value="10" step="0.1" min="0" /></td>
+                        </tr>
+                        <tr>
+                            <td>Rotational Phase (min): </td>
+                            <td><input id="userRotPhaseMin" type="number" value="0" step="0.1" /></td>
+                        </tr>
+                        <tr>
+                            <td>Rotational Phase (max): </td>
+                            <td><input id="userRotPhaseMax" type="number" value="1" step="0.1" /></td>
+                        </tr>
+                        <tr>
+                            <td>Connect LC Points: </td>
+                            <td>
+                                <input type="checkbox" id="userConnectLcPoints" />
+                                <input type="checkbox" id="userConnectRefLcPoints" style="display: none; " />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Reference LC Opacity: </td>
+                            <td><input id="userRefLcOpacity" type="range" min="0" max="1" step="0.01" value="0.5" style="width: 72px; " /></td>
+                        </tr>
+                        <tr>
+                            <td>User LC Opacity: </td>
+                            <td><input id="userLcOpacity" type="range" min="0" max="1" step="0.01" value="1" style="width: 72px; " /></td>
+                        </tr>
+                        <tr>
+                            <td>Performance Mode: </td>
+                            <td><input type="checkbox" id="userPerformanceMode" /></td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div style="margin: 0; padding: 0; border: 0; box-shadow: none; " class="box">
+                    <input id="calcLC" type="button" class="blue box-like" value="Calculate Lightcurve" style="/*width: 200px; animate*/ " />
+                    <input id="abortCalcLC" type="button" class="red box-like" value="Abort" style="width: 64px; margin-left: -2px; display: none; " /><br />
+                    
+                    <input id="loadRefLC" type="button" class="blue box-like" value="Load Reference Lightcurve" style="/*width: 200px; animate*/ " />
+                    <input id="hideRefLC" type="button" class="red box-like" value="Hide" style="width: 64px; margin-left: -2px; display: none; " /><br />
+                    
+                    <input id="exportMesh" type="button" class="blue box-like" value="Export Mesh (.obj)" /><br />
+                    
+                    <div style="float: left; margin-right: 4px; ">
+                    <label class="input-file-fake blue">Load Shape (.obj or .koa)<input type="file" id="userLoadOBJ" style="display: none; " /></label></div>
+                    <input id="removeUserOBJ" type="button" class="red box-like" value="Remove" style="width: 64px; margin-left: -2px; display: none; margin-bottom: -2px; " />
+                    <div style="height: 2px; "></div>
+                    
+                    <input id="exportLC" type="button" class="blue box-like" value="Export Calculated Lightcurve" style="display: none; margin-top: 2px; "/>
+                </div>
+            </div>
+            <div class="box" id="history-box">
+                <!-- marker triangle -->
+                <div id="active-history-marker" style="height: 0; width: 0; border: 20px solid transparent; border-left-color: #3079ed; position: absolute; margin-top: 0; margin-left: -5px; display: none; ">
+                    <div style="height: 0; width: 0; border: 19px solid transparent; border-left-color: #4d90fe; margin-top: -19px; margin-left: -20px; "></div>
+                </div>
+                <table><tr><th>History</th></tr></table>
+                <div id="svg-history"></div>
+            </div>
+        </div>
+        <table id="popup" style="z-index: 1; display: none; height: 100%; width: 100%; position: fixed; top: 0px; left: 0px; background-color: rgba(0, 0, 0, 0.8);"><tbody><tr><td style="cursor: pointer; vertical-align: middle; text-align: center; "><div id="popup-content" style="padding: 10px; cursor: default; height: 80%; width: 80%; border: 1px solid black; box-shadow: 0 0 5px black; margin: 0 auto; background-color: white; overflow: auto; ">
+            
+        </div></td></tr></tbody></table>
+        
+        <div id="toast" style="
+            position: fixed;
+            bottom: 20px;
+            left: calc(50% - 200px);
+            width: 400px;
+            color: white;
+            padding: 10px;
+            background-color: #E83535 ;                 
+            border: 1px solid #A32929;
+            box-shadow: 0 0 5px #A32929, 0 0 15px #A32929;
+            overflow: hidden;
+            text-align: center;
+            display: none; 
+            z-index: 1; 
+        ">
+            Toast
+        </div>
+        <div id="svg-history-popup" class="mini-popup"><input type="button" value="Remove" class="red" /></div>
+        <div id="startpoint-popup" class="mini-popup"><button class="blue">New P<sub>0</sub></button></div>
+        
+        <!--style="height: 0; width: 0; margin: 0; padding: 0; overflow: hidden; "-->
+        <div id="tmp"></div>
+        <script src="jquery-1.11.1.min.js"></script>
+        <script src="three.min.js"></script>
+        <script src="OBJLoader.js"></script>
+        <!-- shaders -->
+        <script type="x-shader/x-vertex" id="vertexshader">
+            void main (void) { 
+                gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex; 
+            }
+        </script>
+        <script type="x-shader/x-fragment" id="fragmentshader">
+            varying	vec3 l;
+            varying	vec3 h;
+            varying vec3 v;
+            varying vec3 n;
+
+            void main (void)
+            {
+                const vec4	diffColor = vec4 ( 0.5, 0.0, 0.0, 1.0 );
+                const vec4	specColor = vec4 ( 0.7, 0.7, 0.0, 1.0 );
+                const float	specPower = 30.0;
+
+                vec3	n2   = normalize ( n );
+                vec3	l2   = normalize ( l );
+                vec3	v2   = normalize ( v );
+                float	a    = max ( 0.0, dot ( n2, l2 ) );
+                float	b    = max ( 0.0, dot ( n2, v2 ) );
+
+                gl_FragColor = diffColor * a / (a + b);
+            }
+        </script>
+        <!-- scripts required for svg to png conversion
+        <script type="text/javascript" src="http://canvg.googlecode.com/svn/trunk/rgbcolor.js"></script> 
+        <script type="text/javascript" src="http://canvg.googlecode.com/svn/trunk/StackBlur.js"></script>
+        <script type="text/javascript" src="http://canvg.googlecode.com/svn/trunk/canvg.js"></script>
+        <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+        -->
+        
+        <script type="text/javascript">
+            // store important DOM elements in global vars
+            var canvasContainer = $('#canvasContainer'), svg = $('#svg'); 
+            
+            var calculatingLightCurve = false, abortLcCalculation = false; ; // true when a lightcurve is currently calculated and calculation should be aborted
+            var sceneRot = 0; // represents the current scene rotation
+            var performanceMode = false; 
+            
+            
+// SCENE
+            // height constants
+            // canvas and canvasContainer size in pxl
+            canvasContainer.width = 310;
+            canvasContainer.height = 310;
+            var historyBoxSvgHeight = 93; 
+            
+            var canvas, light; // scene elements
+            var defaultMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff })
+            var shaderMaterial = new THREE.ShaderMaterial({
+                vertexShader:   $('#vertexshader').text(),
+                fragmentShader: $('#fragmentshader').text()
+            });
+            var sphereGeometry = new THREE.SphereGeometry(1, 32, 32); 
+            var Timo, Tilmann; 
+            //var TilmannBasicVertices = cloneVectorArray(Tilmann.geometry.vertices.slice(0)); 
+            //var TimoBasicVertices = cloneVectorArray(Timo.geometry.vertices.slice(0)); 
+            
+            // renderer and scene settings
+			var scene = new THREE.Scene();
+			var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+			renderer.setSize(canvasContainer.width, canvasContainer.height);
+			canvasContainer.append(renderer.domElement);
+            
+            // default values
+            // may be changed at runtime by user input
+            var defaultCameraOpening = parseFloat($('#userCameraOpening').val());
+            var defaultLightPos = { x: parseFloat($('#userLightX').val()), y: parseFloat($('#userLightY').val()), z: parseFloat($('#userLightZ').val()) }; 
+            var defaultCameraPos = { x: 0, y: -defaultCameraOpening/2, z: 0 };
+            var defaultCameraRot = { x: deg2rad(90), y: deg2rad(0), z: deg2rad(0) };
+            
+            // camera
+			var camera = new THREE.OrthographicCamera( // orthographic camera defines a quader which content is shown
+                defaultCameraOpening/-4, // left
+                defaultCameraOpening/4,  // right
+                defaultCameraOpening/4,  // top
+                defaultCameraOpening/-4, // bottom
+                1, // near
+                defaultCameraOpening+1 // far
+            );
+            camera.position.set(defaultCameraPos.x, defaultCameraPos.y, defaultCameraPos.z);
+            camera.rotation.set(defaultCameraRot.x, defaultCameraRot.y, defaultCameraRot.z);
+            
+                
+            // light
+            light = new THREE.DirectionalLight(0xffffff); // sun light
+            light.position.set(defaultLightPos.x, defaultLightPos.y, defaultLightPos.z).normalize(); 
+            // its rays go from the position through the origin and parallel so its rotations doesn't matter 
+            scene.add(light);
+            
+            // render scene function
+			var render = function(interval) { // if interval is set to true the function will call itself
+                performanceMode = $('#userPerformanceMode').prop('checked'); // refresh performance mode variable
+                
+                if (interval)
+                    requestAnimationFrame(render); // intelligent way of requesting a new frame
+                
+                if (!calculatingLightCurve) { // only read new user settings and values when a lc is not rendered at the moment
+                    // refresh functions
+                    refreshGeometry(); 
+                    refreshCameraAndLight(); 
+                }
+                
+				renderer.render(scene, camera); // actual render function
+			};
+			render(true);
+            
+            // refresh helper functions
+            // changes the default values for camera and light and updates them in the scene
+            function refreshCameraAndLight() {
+                // camera
+                // position
+                // rotation
+                // opening
+                var userInputCameraOpening = parseFloat($('#userCameraOpening').val()); 
+                if (userInputCameraOpening != defaultCameraOpening) { // update cam only if user values have changed
+                    defaultCameraOpening = userInputCameraOpening; 
+                    // console.log(defaultCameraOpening); 
+                    var oldSceneRotation = sceneRot; 
+                    camera = new THREE.OrthographicCamera( 
+                        defaultCameraOpening/-4, defaultCameraOpening/4, defaultCameraOpening/4, defaultCameraOpening/-4, 1, defaultCameraOpening+1
+                    );
+                    defaultCameraPos.y = -defaultCameraOpening/2;
+                    setSceneRot(0); 
+                    rotScene(oldSceneRotation); 
+                }
+                
+                
+                // light
+                if (calculatingLightCurve) {
+                    /*$('#userLightX').val(light.position.x);
+                    $('#userLightY').val(light.position.y);
+                    $('#userLightZ').val(light.position.z);*/
+                }
+                else { // update light only if lc calculation is not running
+                    var userInputLightPos = {
+                        x: parseFloat($('#userLightX').val()), 
+                        y: parseFloat($('#userLightY').val()), 
+                        z: parseFloat($('#userLightZ').val()) 
+                    };
+                    // update only if user input has changed
+                    if (userInputLightPos.x != defaultLightPos.x || userInputLightPos.y != defaultLightPos.y || userInputLightPos.z != defaultLightPos.z) {
+                        // console.log(userInputLightPos + defaultLightPos);
+                        var rotationBefore = sceneRot; 
+                        copyXYZ(defaultLightPos, userInputLightPos); 
+                        setSceneRot(0); 
+                        copyXYZ(light.position, defaultLightPos);
+                        render(false); 
+                        setSceneRot(rotationBefore); 
+                        // console.log(rotationBefore); 
+                        // console.log(sceneRot); 
+                    }
+                }
+            }
+            // refreshes T&t
+            var renderedSettings, renderedSettingsBeforeHide; 
+            function refreshGeometry() {
+                var settings = {
+                    A: parseFloat($('#userA').val()),
+                    B: parseFloat($('#userB').val()),
+                    C: parseFloat($('#userC').val()),
+                    a: parseFloat($('#usera').val()),
+                    b: parseFloat($('#userb').val()),
+                    c: parseFloat($('#userc').val()),
+                    d: parseFloat($('#userd').val()), 
+                    subdiv: parseInt($('#userSubdiv').val())
+                };
+                
+                if (!renderedSettings || 
+                    settings.A != renderedSettings.A || 
+                    settings.B != renderedSettings.B || 
+                    settings.C != renderedSettings.C || 
+                    settings.a != renderedSettings.a || 
+                    settings.b != renderedSettings.b || 
+                    settings.c != renderedSettings.c || 
+                    settings.d != renderedSettings.d ||
+                    settings.subdiv != renderedSettings.subdiv
+                ) {
+                    // refresh geometry only if values have changed
+                    renderedSettings = settings;
+                    Timo = new THREE.Mesh(new THREE.SphereGeometry(1, settings.subdiv, settings.subdiv), shaderMaterial);
+                    Tilmann = new THREE.Mesh(new THREE.SphereGeometry(1, settings.subdiv, settings.subdiv), defaultMaterial);
+                    removeTnT(); 
+                    // deform mesh depending on A, B and C
+                    for (var i = 0; i < Tilmann.geometry.vertices.length; i++) {
+                        Tilmann.geometry.vertices[i].x *= settings.A;
+                        Timo.geometry.vertices[i].x *= settings.a;
+                        Tilmann.geometry.vertices[i].y *= settings.B;
+                        Timo.geometry.vertices[i].y *= settings.b;
+                        Tilmann.geometry.vertices[i].z *= settings.C;
+                        Timo.geometry.vertices[i].z *= settings.c;
+                    }
+                    
+                    // move objects away from each other
+                    Tilmann.position.x = -settings.d;
+                    Timo.position.x = +settings.d;
+                    
+                    // name objects
+                    Tilmann.name = 'Tilmann';
+                    Timo.name = 'Timo';
+                    scene.add(Timo);
+                    scene.add(Tilmann);
+                }
+            }
+            
+            // set scene rotation to a specific degree
+            function setSceneRot(deg) {
+                sceneRot = 0; 
+                // first reset rotation and position of light and cam and rotate afterwards
+                copyXYZ(camera.rotation, defaultCameraRot);
+                copyXYZ(camera.position, defaultCameraPos);
+                copyXYZ(light.position, defaultLightPos);
+                if (deg != 0)
+                    rotScene(deg);
+            }
+            
+            // rotate scene from current state a specific angle further
+            function rotScene(deg) {
+                if (deg == 0)
+                    return; 
+                sceneRot += deg; 
+                camera.rotation.y += deg2rad(deg); // set camera rotation
+                copyXYZ(camera.position, rotVectorZ(camera.position, deg2rad(deg))); // get and set camera position
+                copyXYZ(light.position, rotVectorZ(light.position, deg2rad(deg))); // get and set set light position
+            }
+            
+            // removes Tilmann and Timo from the scene
+            function removeTnT() {
+                for (var i = 0; i < scene.children.length; i++) {
+                    if (scene.children[i].name == 'Tilmann' || scene.children[i].name == 'Timo') {
+                        scene.remove(scene.children[i]);
+                        i--;
+                    }
+                }
+            }
+            // removes the user obj
+            function removeUserObject() {
+                for (var i = 0; i < scene.children.length; i++) {
+                    if (scene.children[i].name == 'User') {
+                        scene.remove(scene.children[i]);
+                        i--; 
+                    }
+                }
+                objImported = false; 
+            }
+            
+            
+            $('#userLoadOBJ').on('change', function() {
+                var file = document.getElementById("userLoadOBJ").files[0];
+                if (file) {
+                    objName = file.name; 
+                    var reader = new FileReader();
+                    reader.readAsText(file, "UTF-8");
+                    reader.onload = function (evt) {
+                        var fileType = file.name.substr(file.name.length - 4, 4); 
+                        if (fileType != ".obj" && fileType != ".koa") {
+                            toast('Only .obj and .koa files can be processed.')
+                            return; 
+                        }
+                        // hide other objects
+                        renderedSettingsBeforeHide = renderedSettings; 
+                        hideObject(); 
+                        removeTnT();
+                        removeUserObject();
+                        
+                        var fileContent = evt.target.result;
+                        if (fileType == '.koa') 
+                            fileContent = koa2obj(fileContent); 
+                        loadOBJ(adjustOBJ(fileContent, defaultCameraOpening / 5.5));
+                    }
+                    reader.onerror = function (evt) {
+                        toast('File could not be read.');  
+                    }
+                }
+                $('#userLoadOBJ').val(''); 
+            });
+            
+            // converts koa to obj
+            function koa2obj(koa) {
+                var obj = 'o UserShape\n'; 
+                var koaLines = koa.split('\n'); 
+                var verticesCount = parseInt(koaLines[0].split(' ')[0]), facesCount = parseInt(koaLines[0].split(' ')[1]); 
+                
+                console.log(verticesCount); 
+                console.log(facesCount); 
+                for (var i = 1; i < verticesCount+1; i++) 
+                    obj += 'v ' + koaLines[i] + '\n';
+                obj += 's off\n';
+                
+                for (var i = 1+verticesCount; i < facesCount+verticesCount+1; i++) 
+                    obj += 'f ' + koaLines[i] + '\n';
+                
+                return obj; 
+            }
+            
+            // scales an obj
+            function adjustOBJ(txt, max) { 
+                var lines = txt.split('\n');
+                var output = ''; 
+                var oldMax = 0;
+                
+                for (var i = 0; i < lines.length; i++) {
+                    if (lines[i].substr(0, 1) == "v") {
+                        var vertices = lines[i].split(' '); 
+                        if (parseFloat(vertices[1]) > oldMax) 
+                            oldMax = parseFloat(vertices[1]);
+                        if (parseFloat(vertices[2]) > oldMax) 
+                            oldMax = parseFloat(vertices[2]);
+                        if (parseFloat(vertices[3]) > oldMax) 
+                            oldMax = parseFloat(vertices[3]);
+                    }
+                }
+                
+                for (var i = 0; i < lines.length; i++) {
+                    if (lines[i].substr(0, 1) == "v") {
+                        var vertices = lines[i].split(' '); 
+                        var j = 1, x, y, z; 
+                        
+                        // check for double space ("  ")
+                        if (vertices[j])
+                            x = map(parseFloat(vertices[j]), 0, oldMax, 0, max); 
+                        else {
+                            j++; 
+                            x = map(parseFloat(vertices[j]), 0, oldMax, 0, max); 
+                        }
+                        j++;
+                        if (vertices[j])
+                            y = map(parseFloat(vertices[j]), 0, oldMax, 0, max); 
+                        else {
+                            j++; 
+                            y = map(parseFloat(vertices[j]), 0, oldMax, 0, max); 
+                        }
+                        j++;
+                        if (vertices[j])
+                            z = map(parseFloat(vertices[j]), 0, oldMax, 0, max); 
+                        else {
+                            j++; 
+                            z = map(parseFloat(vertices[j]), 0, oldMax, 0, max); 
+                        }
+                        
+                        // refresh scaled line
+                        lines[i] = vertices[0] + ' ' + x + ' ' + y + ' ' + z; 
+                    }
+                    output += lines[i] + '\n'; 
+                }
+                return output; 
+            }
+            
+            // remove button
+            $('#removeUserOBJ').on('click', function() {
+                console.log('triggered'); 
+                removeUserObject(); 
+                var tmp = renderedSettingsBeforeHide; 
+                renderedSettings = undefined; 
+                $('#userA').val(tmp.A);
+                $('#userB').val(tmp.B);
+                $('#userC').val(tmp.C);
+                $('#usera').val(tmp.a);
+                $('#userb').val(tmp.b);
+                $('#userc').val(tmp.c);
+                $('#userd').val(tmp.d);
+                
+                hideRemoveUserObjectButton(); 
+            });
+            function showRemoveUserObjectButton() {
+                $('#userLoadOBJ').parent().animate({ 'width': 182 }, 300, function() {
+                        $('#removeUserOBJ').fadeIn(300);
+                }); 
+            }
+            function hideRemoveUserObjectButton() {
+                $('#removeUserOBJ').fadeOut(300, function() {
+                    $('#userLoadOBJ').parent().parent().css('margin-bottom', -4);
+                    $('#userLoadOBJ').parent().animate({ 'width':  248 }, 300, function() {
+                        $('#userLoadOBJ').parent().parent().css('margin-bottom', 0);
+                    });
+                });
+            }
+            
+            var objImported = false, objName = ''; 
+            function loadOBJ(txt) {
+                var manager = new THREE.LoadingManager();
+                var loader = new THREE.OBJLoader( manager );
+                var object = loader.parse(txt);
+                if (object.children[0].geometry.vertices.length > 0) {
+                    console.log(object); 
+                    object.material = defaultMaterial;
+                    object.name = 'User';
+                    objImported = true; 
+                    scene.add(object); 
+                        
+                    showRemoveUserObjectButton();
+                }
+                else { // catch error
+                    toast('Shape file seems to be corrupted.');
+                     $('#removeUserOBJ').trigger('click'); // remove remove button and show T&t again
+                }
+            }
+            
+            var hideObject = function() {
+                $('#userA, #userB, #userC, #usera, #userb, #userc, #userd').val(0);
+            }
+            $('#userHideObject').on('click', hideObject); 
+            
+            var resetObject = function() {
+                $('#userA, #userB, #userC, #usera, #userb, #userc').val(1);
+                $('#userd').val(0.5); 
+            }
+            $('#userResetObject').on('click', resetObject); 
+            
+            
+// DOCUMENT
+            var mouse = { x: 0, y: 0 };
+            $(document).ready(function () {
+                canvas = $('canvas')[0];
+                $('canvas').fadeIn(300);
+                
+                fadeBoxElementsIn(); 
+                
+                //$(window).trigger('resize'); 
+                
+                /*$('#history-box').scroll(function() {
+                    var offsetTop = $('.history-svg-element:eq(' + (currentlyMarkedSvgIndex) + ')').offset().top; 
+                    if ($('#active-history-marker:animated').length == 1) {
+                        // console.log("animation running"); 
+                        return;
+                    }
+                    // console.log("eingriff");
+                    $('#active-history-marker').css(
+                        { 
+                            'top': (
+                                offsetTop +  
+                                historyBoxSvgHeight/2 - 
+                                10 - 
+                                parseInt($('#active-history-marker').css('border-width').replace('px',''))/2
+                            ) 
+                        }
+                    ); 
+                }); */
+                
+                // enable keypress ENTER to recalculate the lightcurve
+                $('input[type="number"]').on('keypress', function (event) {
+                    if (event.which == 13 ) // KBD_ENTER  
+                        $('#calcLC').trigger('click');
+                }); 
+                $('#calcLC').trigger('click'); // calc lightcurve when loading is finished
+            }).on('mousemove', function(e){ 
+                mouse.x = e.clientX || e.pageX; 
+                mouse.y = e.clientY || e.pageY;
+            }); 
+            
+            function fadeBoxElementsIn() {
+                fadeBoxElementsInLoop(0); 
+            }
+            function fadeBoxElementsInLoop(i) {
+                if (i < $('.box').length) {
+                    $('.box:eq('+i+')').animate({ 'opacity': 1 }); 
+                    setTimeout(function() {
+                        fadeBoxElementsInLoop(i+1);
+                    }, 100);
+                }
+            }
+            
+            function setMainProgress(value) {
+                $('#svgContainer').css('background-image', 'linear-gradient(90deg, #ddf '+value*100+'%, transparent 0%');
+            }
+            
+            
+// IMPORT REF LC / POPUP
+            $('#popup td').on('click', function(e) { 
+                if(e.target !== this) {
+                    // console.log(e.target); 
+                    // console.log($('#code-popup-div')); 
+                    return;
+                }
+                $('#popup').fadeOut('fast'); 
+            });
+            var popup = {
+                title: 'title',
+                content: 'content', 
+                type: 'default'
+            }
+            var lastPopupType = 'default'; 
+            // show popup with $('#popup').trigger('show'); 
+            $('#popup').on('show', function() {
+                if (lastPopupType != popup.type)
+                    $('#popup div').html('<h2>'+popup.title+' - Lightcurve Generator</h2>' + popup.content); 
+                $('#popup').fadeIn('fast'); 
+                lastPopupType = popup.type; 
+            });
+            // hide popup with $('#popup').trigger('hide');
+            $('#popup').on('hide', function() {
+                $('#popup').fadeOut('fast'); 
+            });
+            
+            
+            var refLc = []; 
+            // reference lightcurve
+            $('#loadRefLC').on('click', function() {
+                popup.title = 'Load Reference Lightcurve'; 
+                popup.content = '<textarea id="loadLcTextarea" style="width: 90%; height: calc(100% - 32px - 38px - 20px); resize: vertical; border: 1px solid black; " placeholder="Paste your lightcurve here"></textarea><input type="text" id="loadLcSeparator" placeholder="separator" /><input type="button" class="blue" id="loadLcSubmit" value="Load" />';
+                popup.type = 'reference lightcurve'; 
+                $('#popup').trigger('show'); 
+                $('#loadLcSeparator, #loadLcTextarea').on('change keyup keypress', function() {
+                    // console.log($('#loadLcSeparator').val()); 
+                    if ($('#loadLcSeparator').val())
+                        $('#loadLcSubmit').attr('value', 'Load ' + ($('#loadLcTextarea').val().split($('#loadLcSeparator').val()).length - 1) + ' Points');
+                    else
+                        $('#loadLcSubmit').attr('value', 'Load');
+                });
+                $('#loadLcSubmit').on('click', function() {
+                    var userLc = $('#loadLcTextarea').val().split('\n'), userLcTime = [], userLcIllumination = [], userSeparator = $('#loadLcSeparator').val(); 
+                    if (userLc.length == 1 && !userLc[0]) {
+                        toast('No lightcurve has been inserted.'); 
+                        return; 
+                    }
+                    if (!userSeparator) {
+                        toast('The field "Separator" can\'t be empty.');
+                        return; 
+                    }
+                    if (userLc.length == 1) {
+                        toast('The lightcurve seems to be corrupted or the separator is wrong.');
+                        return; 
+                    }
+                    for (var i = 0; i < userLc.length; i++) {
+                        userLcTime.push(userLc[i].split(userSeparator)[0].replace(',','.')); 
+                        userLcIllumination.push(userLc[i].split(userSeparator)[1].replace(',','.')); 
+                    }
+                    var userLcTimeMin = arrayMin(userLcTime);
+                    var userLcTimeMax = arrayMax(userLcTime);
+                    var userLcIlluminationMin = arrayMin(userLcIllumination);
+                    var userLcIlluminationMax = arrayMax(userLcIllumination);
+                    
+                    // sort arrays by time array
+                    refLc = [];
+                    for (var i = 0; i < userLcTime.length; i++) {
+                        refLc.push( {
+                            time: userLcTime[i],
+                            illumination: userLcIllumination[i]
+                        });
+                    }
+                    refLc.sort(function(a, b) {
+                        if (a.time < b.time) 
+                            return -1; 
+                        if (a.time > b.time)
+                            return 1; 
+                        return 0; 
+                    }); 
+                    
+                    
+                    var output = ''
+                    for (var i = 0; i < userLc.length; i++) {
+                        output += '<circle cx="'+
+                            round(map(refLc[i].time, userLcTimeMin, userLcTimeMax, 0, 481), 1)+'" cy="'+
+                            round(map(refLc[i].illumination, userLcIlluminationMin, userLcIlluminationMax, 0, 252), 1)+'" r="'+lcPointRadius+'" />';
+                    }
+                    $('#reference-svg').html(output);
+                    document.getElementById('reference-svg').innerHTML += connectSvgPoints('reference-svg'); 
+                    $('#userConnectRefLcPoints').trigger('change'); // show or hide connections between circles
+                    if ($('#userRefLcOpacity').val() == 0) 
+                        $('#userRefLcOpacity').val(0.5); // auto adjust ref lc opacity to make the lc visible after importing
+                    $('#userRefLcOpacity').trigger('change'); 
+                    $('#popup').trigger('hide');
+                    showRefLcHideButton();
+                });
+            }); 
+            // hide button
+            $('#hideRefLC').on('click', function() {
+                $('#userRefLcOpacity').val(0); 
+                $('#userRefLcOpacity').trigger('change'); 
+                hideRefLcHideButton(); 
+            });
+            
+            function showRefLcHideButton() {
+                $('#loadRefLC, #hideRefLC, #userConnectRefLcPoints').stop(); 
+                $('#userConnectRefLcPoints').fadeIn(300); 
+                $('#loadRefLC').animate({ 'width': 200 }, 300, function() {
+                        $('#hideRefLC').fadeIn(300);
+                }); 
+            }
+            function hideRefLcHideButton() {
+                $('#loadRefLC, #hideRefLC, #userConnectRefLcPoints').stop(); 
+                $('#hideRefLC, #userConnectRefLcPoints').fadeOut(300, function() {
+                    $('#loadRefLC').animate({ 'width':  266}, 300)
+                });
+            }
+            
+            // opacity changing of lightcurves
+            $('#userRefLcOpacity').on('change mousemove', function() {
+                // much stuff to hide or show the hide-ref-lc button
+                if (!$('#reference-svg').html()) { // no ref-lc loaded
+                    // maby add toast
+                }
+                else { // ref lc loaded
+                    if (!$('#hideRefLC').is(':visible') && $('#userRefLcOpacity').val() > 0) // hide button not visible
+                        showRefLcHideButton(); 
+                    if ($('#hideRefLC').is(':visible') && $('#userRefLcOpacity').val() == 0)
+                        hideRefLcHideButton();
+                    
+                    // basic functionality
+                    $('#reference-svg').css({ 'opacity': $('#userRefLcOpacity').val() }); 
+                }
+            });
+            $('#userLcOpacity').on('change mousemove', function() {
+                $('#svg circle, #svg .pc').css({ 'opacity': $('#userLcOpacity').val() }); 
+            });
+            
+            function linearInterpolation() {
+                
+            }
+            
+// LIGHTCURVE CALCULATION
+            var lc, lcPoints, yAxisOffset = 19, xAxisOffset = 20; // pixel values allow svg padding adaption 
+            $('#calcLC').on('click', function () { // calculate button click event (triggered by a few other functions)
+                if (!calculatingLightCurve) {
+                    calculatingLightCurve = true; 
+                    performanceMode = $('#userPerformanceMode').prop('checked'); // enable user interface freezing calculation or not
+                    
+                    if (!performanceMode && objImported) { // check if spheres are shining through imported obj
+                        if (parseFloat($('#userA').val()) != 0 || parseFloat($('#userB').val()) != 0 || parseFloat($('#userC').val()) != 0 || parseFloat($('#usera').val()) != 0 || parseFloat($('#userb').val()) != 0 || parseFloat($('#userc').val()) != 0 || parseFloat($('#userd').val())) 
+                            toast('The lightcurve of an imported shape is being calculated although the default spheres may not be entirely hidden. Click the "Hide" button underneath "Object" to get an unaffected lightcurve.', 12000);
+                    }
+                    
+                    showLcAbortButton(); // show lc abort button
+                    $('#exportLC').fadeOut(); // hide lc export button
+                    
+                    addArrayHistoryElement(); // pushes the current user input values to the history array
+                    $('#svg').unbind('mousemove'); // avoid that the shape rotation can be affected when the svg fades out and the lc calculation is already running
+                    $('#svg, #reference-svg, #lc-info').fadeOut(300); // hide old lc while the new one is being calculated
+                    markHistorySvgAsActive(-1); 
+                    lcPoints = parseFloat($('#userLcPoints').val()); // number of points in the lightcurve
+
+                    // check if user data for rotation phase max and min is valid
+
+                    var rotPhaseMin = parseFloat($('#userRotPhaseMin').val()), rotPhaseMax = parseFloat($('#userRotPhaseMax').val());
+                    if (isNaN(rotPhaseMin)) {
+                        $('#userRotPhaseMin').val(0); 
+                        rotPhaseMin = 0;
+                    }
+                    if (isNaN(rotPhaseMax)) {
+                        $('#userRotPhaseMax').val(1); 
+                        rotPhaseMax = 1;
+                    }
+                    getLightCurve(rotPhaseMin*360, rotPhaseMax*360, canvas, lcPoints);
+                }
+            });
+            var settingsHistory = [], lcPointRadius = 1; 
+            $('#calcLC').on('finished', function () { // triggered (by getLightCurve) when calculation has finished
+                
+                var lcMin = arrayMin(lc), lcMax = arrayMax(lc); // get min and max values
+                settingsHistory[settingsHistory.length-1].lc = lc; 
+                // console.log(lcMax + " " + lcMin); 
+                
+                // information below
+                $('#lc-info').html(
+                    lcPoints+' lightcurve points in '+addDecialZeros(round((calcLcEndMillis-calcLcStartMillis)/1000, 3), 3)+
+                    ' seconds ('+(addDecialZeros(round(Math.pow((calcLcEndMillis-calcLcStartMillis)/1000/lcPoints, -1), 2), 2))+
+                    ' points per second)' + 
+                    '<table cellspacing="0" cellpadding="0"><tr>' + 
+                    '<td>&Delta;m = ' + addDecialZeros(round(-(lcMax-lcMin)/lcMax, 5), 5) + '</td>' + 
+                    '<td>&chi;<sup>2</sup> = </td>' + 
+                    '</tr></table>'); 
+                settingsHistory[settingsHistory.length-1].information = $('#lc-info').html();
+                
+                var xSteps = ((svg.width() - yAxisOffset) - 2*lcPointRadius) / lcPoints; // calculate pixel 
+                var output = getSVGAxis(svg, xAxisOffset, yAxisOffset); // output variable is a collection of all svg element children
+                for (var i = 0; i < lc.length; i++) { // add points
+                    output += '<circle cx="'+round(i*xSteps + lcPointRadius + yAxisOffset, 1)+'" cy="'+
+                        round(map(lc[i], lcMin, lcMax, lcPointRadius, svg.height() - lcPointRadius - xAxisOffset), 1)
+                    +'" r="'+lcPointRadius+'" />'; 
+                }
+                
+                $('#svg').html(output); // manipulate the DOM only once per lightcurve 
+                var circleConnections = connectSvgPoints('svg');
+                document.getElementById('svg').innerHTML += circleConnections; 
+                $('#svg, #reference-svg, #lc-info').fadeIn(300); // show lc
+                
+                // needs to be before the onmousemove listener is added to the svg because otherwise the line and the text might be copied as well
+                addSvgHistoryElement(output + circleConnections); // adds rendered svg to this history div 
+                
+                $('#userConnectLcPoints').trigger('change'); // show or hide connections between circles
+                $('#userLcOpacity').trigger('change'); // refresh opacity
+                
+                $('#svg, #reference-svg').on('mousemove', function (evt) { // make svg element responsive (show the rotated shape depending on the mouse position)
+                    // find mouse position relative to svg element
+                    var x = evt.pageX - $('#svg').offset().left - .5; // -.5 otherwise strange results
+                    if (x > yAxisOffset-1) { // above the diagram
+                        if (!calculatingLightCurve) { // do line 
+                            // add line to svg that represents the rendered rotations phase in the canvas
+                            if ($('#svg > #svg-rotphase-line').length == 0) {
+                                var newLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                                newLine.setAttribute('id','svg-rotphase-line');
+                                var newText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                                newText.setAttribute('id','svg-rotphase-text');
+                                $('#svg').append(newLine);
+                                $('#svg').append(newText);
+                            }
+                            // position the new line and write the text
+                            $('#svg-rotphase-line').attr('x1', x).attr('x2', x).attr('y1', 0).attr('y2', (svg.height() - xAxisOffset + 4));
+                            // console.log(renderedTargetRotDeg); 
+                            $('#svg-rotphase-text').attr('x', x).attr('y', (svg.height()-xAxisOffset)).html(
+                                addDecialZeros(round(map(x, yAxisOffset, svg.width()-1, renderedStartRotDeg/360, renderedTargetRotDeg/360), 3), 3)
+                            );
+                            if (map(x, yAxisOffset, svg.width()-1, 0, 1) < .9)
+                                $('#svg-rotphase-text').css('text-anchor', 'start');
+                            else 
+                                $('#svg-rotphase-text').css('text-anchor', 'end');
+                        }
+                        
+                        setTimeout(function() {
+                            // allow roataion in specific phase rotations ranges
+                            setSceneRot(map(map(x, yAxisOffset, svg.width()-1, 0, 360), 0, 360, renderedStartRotDeg, renderedTargetRotDeg)); // rotate scene
+                        }, 0); 
+                    }
+                })
+                
+                // important for select as begin rotational phase menu
+                //$('#svg')
+                .on('click', function() {
+                    if ($('#startpoint-popup').css('display') == "none" || $('#startpoint-popup').css('opacity') == "0") {
+                        $('#startpoint-popup').css({ 'top': mouse.y + $(window).scrollTop(), 'left': mouse.x })
+                        $('#startpoint-popup').fadeIn('fast');
+                    }
+                    else {
+                        $('#startpoint-popup').fadeOut('fast');
+                    }
+                })
+                //$('#svg')
+                .on('mouseout', function() {
+                    $('#startpoint-popup').fadeOut('fast');  
+                });
+                $('#startpoint-popup').on('click', function() {
+                    // console.log('click'); 
+                    if (!calculatingLightCurve) { // only if no calculation is running
+                        // to-do code
+                        // set new rotation phase min and adjust rotation phase max
+                        var newMin = sceneRot/360; 
+                        var oldMin = renderedStartRotDeg/360;
+                        var oldMax = renderedTargetRotDeg/360;
+                        // console.log(sceneRot/360); 
+                        $('#userRotPhaseMin').val(round(newMin, 3));
+                        $('#userRotPhaseMax').val(round(newMin+oldMax-oldMin, 3));
+                        
+                        // start calculation only if performance mode is disabled (bugs...)
+                        if (!performanceMode)
+                            $('#calcLC').trigger('click'); 
+                    }
+                    // default popup stuff
+                    $('#startpoint-popup').fadeOut(function() {
+                        $(this).bind('mousemove', function() {
+                            $(this).stop().show().css('opacity', 1); 
+                        });
+                    }).unbind('mousemove');    
+                }).on('mousemove', function() {
+                    $(this).stop().show().css('opacity', 1); 
+                }).on('mouseout', function() {
+                    $(this).fadeOut(); 
+                });; 
+                // end menu
+
+                setMainProgress(0); // progress reset
+                hideLcAbortButton(); // hide abort button
+                $('#exportLC').fadeIn(); // show export button
+                
+                calculatingLightCurve = false;
+            });
+            
+            // abort button
+            function showLcAbortButton() {
+                if (performanceMode)
+                    return; // abort function will not work and is not available in performance-mode
+                $('#calcLC, #abortCalcLc').stop(); 
+                $('#calcLC').animate({ 'width': 200 }, 300, function() {
+                        $('#abortCalcLC').fadeIn(300);
+                }); 
+            }
+            function hideLcAbortButton() {
+                $('#calcLC, #abortCalcLC').stop(); 
+                $('#abortCalcLC').fadeOut(300, function() {
+                    $('#calcLC').animate({ 'width':  266}, 300)
+                });
+            }
+            $('#abortCalcLC').on('click', function() {
+                abortLcCalculation = true; 
+            });
+            
+            var calcLcStartMillis, calcLcEndMillis; 
+            var renderedStartRotDeg, renderedTargetRotDeg; // make those vars global to allow mousemove event work correct above the canvas
+            function getLightCurve(startRotDeg, targetRotDeg, canvas, points) {
+                toastShown = false; // toast "object out of camera fov"
+                gl = canvas.getContext("webgl", { preserveDrawingBuffer: true }); 
+                // console.log(gl); 
+                renderedStartRotDeg = startRotDeg; 
+                renderedTargetRotDeg = targetRotDeg;
+                setSceneRot(startRotDeg); // reset scene rotation
+                lc = []; // delete old lc array
+                
+                calcLcStartMillis = millis(); // time
+                
+                getLightCurveLoop(startRotDeg, targetRotDeg, canvas, points, 0); 
+                // loop in external function (getLightCurveLoop()) to allow usage of setTimeout function
+            }
+            function getLightCurveLoop (startRotDeg, targetRotDeg, canvas, points, i) { // helper function for getLightCurve()
+                if (i < points) {
+                    render(false); // performance information: takes about 0.001 seconds
+                    
+                    // performance information: takes about .003 seconds
+                    lc.push(-2.5  * (Math.log(getCanvasBrightness(canvas)) / Math.LN10)); // get canvas brightness and convert from linear to logarithmic scal
+                    rotScene((targetRotDeg - startRotDeg) / points); // rotate scene one step further
+                    
+                    if (!abortLcCalculation) { // no abort
+                        // keep the layout responsive
+                        
+                        if (performanceMode) 
+                            getLightCurveLoop(startRotDeg, targetRotDeg, canvas, points, i+1); // next loop run
+                        else {
+                            setTimeout(function () { getLightCurveLoop(startRotDeg, targetRotDeg, canvas, points, i+1); }, 0); // next loop run
+                            setMainProgress((i+1)/points);
+                        }
+                    }
+                    else { // abort calculation
+                        calculatingLightCurve = false; 
+                        abortLcCalculation = false; 
+                        hideLcAbortButton();
+                        setMainProgress(0); 
+                        setSceneRot(0); 
+                        renderedStartRotDeg = 0;
+                        renderedTargetRotDeg = 360; 
+                        $('#svg').html(getSVGAxis(svg, xAxisOffset, yAxisOffset)); 
+                        $('#lc-info').html('').add('#svg, #reference-svg').fadeIn(300);
+                    }
+                }
+                else { // loop finished
+                    calcLcEndMillis = millis(); // time
+                    // console.log(lc);
+                    setSceneRot(startRotDeg); 
+                    $('#calcLC').trigger('finished');
+                }
+            }
+            
+            // returns brightness of a grayscale canvas
+            var gl, toastShown; 
+            function getCanvasBrightness (canvas) { 
+                var pixelData = new Uint8Array(canvas.width * canvas.height * 4);
+                gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixelData); // performance information: takes most of the time
+                var sum = 0; 
+                // performance information: for loop takes about 0.0003 seconds
+                for (var i = 0; i < pixelData.length; i += 4) { // i:red i+1:green i+2:blue i+3:alpha
+                    // check if border pixels are illuminated which is bad 
+                    if (!performanceMode && pixelData[i] > 0 && !toastShown && (
+                        (i/4) % canvas.width == 0 || // left
+                        (i/4) < canvas.width || // top
+                        ((i/4)+1) % canvas.width == 0 || // right
+                        (i/4) >= canvas.width * (canvas.height-1)) // bottom
+                       ) {
+                        toastShown = true; 
+                        toast('Object seems to be out of camera field of view. Increase camera opening to fix it. ');
+                    }
+                    sum += pixelData[i]; // sum up red values which represent the brightness of a grayscale canvas (better performance)
+                }
+                return sum; 
+            }
+            
+            
+            
+// HISTORY
+            // pushes the current user input values to the history array
+            function addArrayHistoryElement() {
+                settingsHistory.push({
+                    A: parseFloat($('#userA').val()),
+                    B: parseFloat($('#userB').val()),
+                    C: parseFloat($('#userC').val()),
+                    a: parseFloat($('#usera').val()),
+                    b: parseFloat($('#userb').val()),
+                    c: parseFloat($('#userc').val()),
+                    d: parseFloat($('#userd').val()), 
+                    subdiv: parseInt($('#userSubdiv').val()), 
+                    x: parseFloat($('#userLightX').val()), 
+                    y: parseFloat($('#userLightY').val()), 
+                    z: parseFloat($('#userLightZ').val()), 
+                    points: parseFloat($('#userLcPoints').val()),
+                    camOpening: parseFloat($('#userCameraOpening').val()),
+                    min: parseFloat($('#userRotPhaseMin').val()) * 360, // convert to deg
+                    max: parseFloat($('#userRotPhaseMax').val()) * 360, 
+                    information: '', 
+                    lc: [], 
+                    objImported: objImported, 
+                    objName: objName
+                });
+            }
+            
+            // add rendered svg to this history div
+            function addSvgHistoryElement(data) {
+                if(!$('#history-box').is(':visible')) 
+                    $('.wrapper').animate({ 'width': 1053}, 300, function() {
+                        $('#history-box').fadeIn(300); 
+                    }); 
+                
+                $('#svg-history').prepend(
+                    '<svg data-id="'+(settingsHistory.length-1)+'" class="history-svg-element" version="1.1" xmlns="http://www.w3.org/2000/svg"><g transform="scale('+(historyBoxSvgHeight/(svg.height()-xAxisOffset))+') translate('+-yAxisOffset+' 0)">' + data + '</g></svg>'
+                );
+                $('#history-box svg').first().animate({ 
+                    'height': historyBoxSvgHeight, 
+                    'margin-top': 10 
+                }, 300, function() {
+                    markHistorySvgAsActive(0); // mark newest element as currently shown / active 
+                });  
+                
+                $('#history-box svg').first().on('mouseover', function() { // triggered when a history svg element is hovered
+                    if (calculatingLightCurve) // disallow changes while calculating a lc
+                        return;
+                    
+                    markHistorySvgAsActive($(this).index());
+                    
+                    var tmp = settingsHistory[$(this).data('id')];
+                    $('#userA').val(tmp.A);
+                    $('#userB').val(tmp.B);
+                    $('#userC').val(tmp.C);
+                    $('#usera').val(tmp.a);
+                    $('#userb').val(tmp.b);
+                    $('#userc').val(tmp.c);
+                    $('#userd').val(tmp.d);
+                    $('#userSubdiv').val(tmp.subdiv);
+                    $('#userLightX').val(tmp.x);
+                    $('#userLightY').val(tmp.y);
+                    $('#userLightZ').val(tmp.z);
+                    $('#userLcPoints').val(tmp.points);
+                    $('#userCameraOpening').val(tmp.camOpening);
+                    $('#userRotPhaseMin').val(tmp.min/360);
+                    renderedStartRotDeg = tmp.min; 
+                    $('#userRotPhaseMax').val(tmp.max/360);
+                    renderedTargetRotDeg = tmp.max; 
+                    $('#lc-info').html(tmp.information);
+                    lc = tmp.lc; 
+                    
+                    if (tmp.objImported && !objImported) // no obj is loaded anymore and obj-lc is being hovered
+                        toast('This lightcurve was calculated while a user shape ('+tmp.objName+') was loaded.');
+                    if (!tmp.objImported && objImported) // an obj is loaded and non-obj-lc is being hovered
+                        toast('This lightcurve was calculated while no user shape was loaded.');
+                    if (tmp.objImported && objImported && tmp.objName != objName) // another obj is loaded
+                        toast('This lightcurve was calculated while another user shape ('+tmp.objName+') was loaded.');
+                    
+                    var renderLineAndText = $('#svg').children().last().prev().andSelf(); // copy line and text showing the rotation phase
+                    $('#svg').html($(this).children().first().html());
+                    $('#svg').append(renderLineAndText);
+                })
+                
+                // important for history svg menu (remove)
+                .on('click', function() {
+                    if ($('#svg-history-popup').css('display') == "none") {
+                        $('#svg-history-popup').css({ 'top': mouse.y + $(window).scrollTop(), 'left': mouse.x })
+                        $('#svg-history-popup').fadeIn('fast');
+                    }
+                    else
+                        $('#svg-history-popup').fadeOut('fast');
+                }).on('mouseout', function() {
+                    $('#svg-history-popup').fadeOut('fast');  
+                }); 
+            }
+            $('#svg-history-popup').on('click', function() {
+                $('#active-history-marker').fadeOut(100); 
+                
+                $('.history-svg-element:eq('+currentlyMarkedSvgIndex+')').animate({ 'height': 0, 'margin-top': 0 }, 500, function() { 
+                    if ($('.history-svg-element').length == 1) // if no lc are in the history div, fade it out
+                        $('#history-box').fadeOut(function() {
+                            $('.wrapper').animate({ 'width': 854}, 300); 
+                        });
+                    $(this).remove(); 
+                });
+                
+                // if there svgs remaining, mark the first one as active and trigger mouseover to make sure that the main svg shows the correct lc
+                if ($('.history-svg-element').length != 1) { 
+                    if (currentlyMarkedSvgIndex == 0)
+                        markHistorySvgAsActive(1);
+                    else 
+                        markHistorySvgAsActive(0);
+                    $('.history-svg-element:eq(0)').trigger('mouseover');
+                }
+                
+                $('#svg-history-popup').fadeOut(function() {
+                    $(this).bind('mousemove', function() {
+                        $(this).stop().show().css('opacity', 1); 
+                    }); 
+                }).unbind('mousemove');  
+            }).on('mousemove', function() {
+                $(this).stop().show().css('opacity', 1);
+            }).on('mouseout', function() {
+                $(this).fadeOut(); 
+            });; 
+            
+            var currentlyMarkedSvgIndex = -1; 
+            function markHistorySvgAsActive(index) {
+                currentlyMarkedSvgIndex = index; 
+                $('.history-svg-element').attr('class', 'history-svg-element');
+                if (index == -1) {
+                    $('#active-history-marker').fadeOut(300); 
+                    return; 
+                }
+                $('.history-svg-element:eq(' + (index) + ')').attr('class', 'history-svg-element history-svg-element-active ');
+                
+                // position active marker triangle
+                // console.log("offset-top " + $('.history-svg-element:eq(' + (index) + ')').offset().top); 
+                // console.log("height/2 " + $('.history-svg-element:eq(' + (index) + ')').height()/2); 
+                var offsetTop = 93; 
+                if (index != 0) 
+                    offsetTop = $('.history-svg-element:eq(' + (index) + ')').offset().top; 
+                setTimeout(function() {
+                    $('#active-history-marker').stop(); 
+                    $('#active-history-marker').animate(
+                        { 
+                            'top': (
+                                offsetTop +  
+                                historyBoxSvgHeight/2 - 
+                                10 - 
+                                parseInt($('#active-history-marker').css('border-width').replace('px',''))/2
+                            ), 
+                            'opacity': 1
+                        }, 
+                        300
+                    ); 
+                
+                    // fade in if not already visible
+                    if(!$('#active-history-marker').is(':visible')) 
+                        $('#active-history-marker').fadeIn(300); 
+                }, 10); 
+            }
+            
+
+// SVG
+            function connectSvgPoints(id) {
+                var output = ''; 
+                var points = $('#'+id+' circle').length;
+                var svgWidth = $('#'+id).width(); 
+                for (var i = 1; i < $('#'+id +' circle').length; i++) {
+                    var x1 = round($('#'+id +' circle:eq('+(i-1)+')').attr('cx'), 1); 
+                    var x2 = round($('#'+id +' circle:eq('+i+')').attr('cx'), 1); 
+                    var y1 = round($('#'+id +' circle:eq('+(i-1)+')').attr('cy'), 1); 
+                    var y2 = round($('#'+id +' circle:eq('+i+')').attr('cy'), 1);
+                    if (!(Math.abs(x1-x2) > svgWidth / points * 10)) // check that delta x is not to big (error)
+                        output += '<line class="pc" x1="'+x1+'" x2="'+x2+'" y1="'+y1+'" y2="'+y2+'" />';
+                }
+                return output; 
+            }
+            $('#userConnectLcPoints').on('change', function() {
+                if ($('#userConnectLcPoints').prop('checked'))
+                    $(':not(#reference-svg) > .pc').show();
+                else 
+                    $(':not(#reference-svg) > .pc').hide(); 
+            });
+            $('#userConnectRefLcPoints').on('change', function() {
+                if ($('#userConnectRefLcPoints').prop('checked'))
+                    $('#reference-svg > .pc').show();
+                else 
+                    $('#reference-svg > .pc').hide(); 
+            });
+            
+
+            // returns a string with different svg elements which show axes
+            function getSVGAxis (svg, xAxisOffset, yAxisOffset) {
+                var output = '';
+                // axis lines
+                output += '<line x1="'+yAxisOffset+'" x2="'+(svg.width())+'" y1="'+(svg.height()-xAxisOffset)+'" y2="'+(svg.height()-xAxisOffset)+'" />';
+                output += '<line x1="'+yAxisOffset+'" x2="'+yAxisOffset+'" y1="'+0+'" y2="'+(svg.height()-xAxisOffset)+'" />';
+                //titles
+                output += '<text x="'+((svg.width()-yAxisOffset)/2+yAxisOffset)+'" y="'+(svg.height() - 2)+'">rotational phase</text>';
+                output += '<text y="'+((svg.height()-xAxisOffset)/2)+'" x="'+4+'" style="writing-mode: tb; glyph-orientation-vertical: 270; direction: rtl; ">edutingam</text>';
+                // scale
+                output += '<text x="'+(3+yAxisOffset)+'" y="'+(svg.height() - 2)+'">'+(round(renderedStartRotDeg/360, 3))+'</text>'; // 0
+                output += '<text x="'+(svg.width()-3)+'" y="'+(svg.height() - 2)+'" style="text-anchor: end; ">'+(round(renderedTargetRotDeg/360, 3))+'</text>'; // 1
+                // ticks
+                for (var i = 0, ticks = 10; i <= ticks; i++) {
+                    output += '<line x1="'+((svg.width()-1-yAxisOffset)/ticks * i + yAxisOffset)+'" x2="'+((svg.width()-1-yAxisOffset)/ticks * i + yAxisOffset)+'" y1="'+(svg.height()-xAxisOffset+1)+'" y2="'+(svg.height()-xAxisOffset+4)+'" />';
+                    output += '<line y1="'+((svg.height()-xAxisOffset)/ticks*i)+'" y2="'+((svg.height()-xAxisOffset)/ticks*i)+'" x1="'+(yAxisOffset)+'" x2="'+(yAxisOffset-4)+'" />'; 
+                }
+                return output;
+            }
+            
+            
+// EXPORT LC / SHAPE
+            $('#exportLC').on('click', function() {
+                saveTextAsFile(convertLightcurveToText(lc, ' '), 'lightcurve'); 
+            });
+            $('#exportMesh').on('click', function() {
+                saveTextAsFile(convertSceneToObjString(), 'shape.obj'); 
+            }); 
+            function convertSceneToObjString() {
+                var tilmannString = '', timoString = '', output = 'o Test\n', d = renderedSettings.d;
+                
+                // vertices
+                for (var i = 0; i < Tilmann.geometry.vertices.length; i++) {
+                    tilmannString += 'v ' + (Tilmann.geometry.vertices[i].x-d) + ' ' + Tilmann.geometry.vertices[i].y + ' ' + Tilmann.geometry.vertices[i].z + '\n';
+                    timoString += 'v ' + (Timo.geometry.vertices[i].x+d) + ' ' + Timo.geometry.vertices[i].y + ' ' + Timo.geometry.vertices[i].z + '\n';
+                }
+                output += tilmannString + timoString + 's off\n';
+                tilmannString = '';
+                timoString = ''; 
+                // faces
+                for (var i = 0, j = 1; i < Tilmann.geometry.faces.length; i++, j += 3) {
+                    tilmannString += 
+                        'f ' + 
+                        Tilmann.geometry.faces[i].a + ' ' + 
+                        Tilmann.geometry.faces[i].b + ' ' + 
+                        Tilmann.geometry.faces[i].c + ' ' + '\n';
+                    timoString += 
+                        'f ' + 
+                        (Timo.geometry.faces[i].a+Tilmann.geometry.vertices.length) + ' ' + 
+                        (Timo.geometry.faces[i].b+Tilmann.geometry.vertices.length) + ' ' + 
+                        (Timo.geometry.faces[i].c+Tilmann.geometry.vertices.length) + ' ' + '\n';
+                }
+                output += tilmannString + timoString;
+                return output.substr(0, output.length-2); 
+            }
+            
+            function convertLightcurveToText(lc, separator) {
+                var output = 'rotational-phase illumination\n', lcMin = arrayMin(lc), lcMax = arrayMax(lc); 
+                for (var i = 0; i < lc.length; i++) {
+                    output += 
+                        map(i, 0, lc.length, renderedStartRotDeg/360, renderedTargetRotDeg/360) + separator + // rot phase
+                        map(lc[i], lcMin, lcMax, 0, 1) + '\n'; // scaled illumination
+                }
+                return output.substr(0, output.length - 2); // remove last "\n" 
+            }
+            function saveTextAsFile(text, fileName) {
+                var textFileAsBlob = new Blob([text], {type:'text/plain'});
+                var tmpDownloadLink = document.createElement("a");
+                tmpDownloadLink.download = fileName;
+                tmpDownloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+                tmpDownloadLink.click();
+            }
+            
+            
+// MATH
+            // rotates a vector around its z axis
+            function rotVectorZ (vector, rad) {
+                if (!vector)
+                    return 0;
+                return vectorXmatrix(vector, rotMatZ(rad));
+            }
+            
+            // multiplies a vector with a matrix
+            function vectorXmatrix (v, m) {
+                if (!v || !m)
+                    return 0;
+                return {
+                    x: m[0][0]*v.x + m[0][1]*v.y + m[0][2]*v.z,
+                    y: m[1][0]*v.x + m[1][1]*v.y + m[1][2]*v.z,
+                    z: m[2][0]*v.x + m[2][1]*v.y + m[2][2]*v.z
+                };
+            }
+            
+            // calculates a rotation matrix to rotate around the z axis
+            function rotMatZ (rad) {
+                if (!rad)
+                    return 0; 
+                return [
+                    [Math.cos(rad), -Math.sin(rad), 0], 
+                    [Math.sin(rad), Math.cos(rad),  0], 
+                    [0,             0,              1]
+                ];
+            }       
+            
+            // calculates a rotation matrix to rotate around an origin vector
+            function rotMatVector (v, rad) {
+                if (!rad || !v)
+                    return 0; 
+                return [
+                    [v.x*v.x*(1-Math.cos(rad))+    Math.cos(rad), v.x*v.y*(1-Math.cos(rad))-v.z*Math.sin(rad), v.x*v.z*(1-Math.cos(rad))+v.y*Math.sin(rad)], 
+                    [v.y*v.x*(1-Math.cos(rad))+v.z*Math.sin(rad), v.y*v.y*(1-Math.cos(rad))+    Math.cos(rad), v.y*v.z*(1-Math.cos(rad))-v.x*Math.sin(rad)], 
+                    [v.z*v.x*(1-Math.cos(rad))-v.y*Math.sin(rad), v.z*v.y*(1-Math.cos(rad))+v.x*Math.sin(rad), v.z*v.z*(1-Math.cos(rad))+    Math.cos(rad)]
+                ];
+            }
+            
+            // converts degree to radian
+            function deg2rad(deg) {
+                return (deg * 0.0174532925);
+            }
+            
+// OTHER
+            function toast(text, ms) {
+                if (!ms)
+                    var ms = 5000; 
+                $('#toast').promise().done(function() {
+                    $(this).html(text).fadeIn().delay(ms).fadeOut();
+                });
+            }
+            
+// BASIC
+            function round(x, dec) {
+                var tmp = (Math.round(x*Math.pow(10,dec))/Math.pow(10,dec)).toString(); 
+                if (hasSubstr(tmp, '.'))
+                    return parseFloat(tmp.substr(0, tmp.indexOf('.')+dec+1));
+                else 
+                    return parseInt(tmp); 
+            }
+            
+            function millis() { return new Date().getTime(); }
+            
+            function addDecialZeros(x, length) { if (!hasSubstr(x, '.')) x+='.'; while (x.toString().length-x.toString().indexOf('.')-1<length) x=x+'0'; return x; }
+            function addLeadingZeros(x, length) { while (x.toString().length < length) x += '0'; return x; } // adds leading zeros to integers not floats (!)
+            function hasSubstr(x, substr) { if (x.toString().replace(substr, '').length != x.toString().length) return true; return false; } // str has substr check
+            
+            function cloneVectorArray(array) {
+                var clone = [];
+                for (var i = 0; i < array.length; i++) {
+                    clone.push({ x: undefined, y: undefined, z: undefined });
+                    copyXYZ(clone[i], array[i]);
+                }
+                return clone.slice(0); 
+            }
+            function copyXYZ(target, origin) { target.x = origin.x; target.y = origin.y; target.z = origin.z; }
+            function map(x, in_min, in_max, out_min, out_max) { return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min; } // maps a value
+            
+            function arrayMin(x) { var min = x[0]; for (i = 1; i < x.length; i++) if (x[i] < min) min = x[i]; return min; } // returns min value of an array
+            function arrayMax(x) { var max = x[0]; for (i = 1; i < x.length; i++) if (x[i] > max) max = x[i]; return max; } // returns max value of an array
+		</script>
+    </body>
+</html>
